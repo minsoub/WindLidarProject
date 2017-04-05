@@ -104,6 +104,18 @@ namespace WindLidarEmulator
                         log("RTD : " + rtdFileName + " file is created....");
                     }
 
+                    // Alerm 파일 생성
+                    // 30초에 하나씩??
+                    if (sector_unit % 30 == 0)
+                    {
+                        string alarmName = DateTime.Now.ToString("dd_HH_mm_ss") + ".alm";
+
+                        if (AlarmFileProcess(alarmName, "alm") == true)
+                        {
+                            log("ALM : " + alarmName + " file is created....");
+                        }
+                    }
+
                     if (sector_unit == 360)     // last scan
                     {
                         // STA 파일 생성
@@ -118,17 +130,6 @@ namespace WindLidarEmulator
                         sector_unit = 0;
                     }
 
-                    // Alerm 파일 생성
-                    // 30초에 하나씩??
-                    if (sector_unit % 30 == 0)
-                    {
-                        string alarmName = DateTime.Now.ToString("dd_HH_mm_ss") + ".alm";
-
-                        if (AlarmFileProcess(alarmName, "alm") == true)
-                        {
-                            log("ALM : " + alarmName + " file is created....");
-                        }
-                    }
 
                     index++;
                     log("File creation end...........");

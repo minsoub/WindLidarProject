@@ -18,9 +18,9 @@ namespace WindLidarEmulator
         {
             InitializeComponent();
 
-            cboSite.Items.Add("STA");
-            cboSite.Items.Add("STB");
-            cboSite.Items.Add("STC");
+            cboSite.Items.Add("13211");
+            cboSite.Items.Add("13210");
+            cboSite.Items.Add("13206");
 
             process = null;
 
