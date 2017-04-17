@@ -120,7 +120,7 @@ namespace WindLidarEmulator
                     {
                         // STA 파일 생성
                         et_tm = DateTime.Now.ToString("dd_HH_mm_ss");
-                        string staFileName = st_tm + "-" + et_tm + ".sta";  
+                        string staFileName = st_tm + "_-_" + et_tm + ".sta";  
                         
                         // st_tm, et_tm 사용해서 파일 생성
                         if (StsFileProcess(staFileName, "sts") == true)
