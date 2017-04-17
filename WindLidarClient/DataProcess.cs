@@ -147,6 +147,7 @@ namespace WindLidarClient
                 string ext = Path.GetExtension(file);
                 if (ext == ".rtd")
                 {
+                   // Console.WriteLine("rtd found...");
                     DateTime rtdDt = convertTimeExtract(fi.Name);
 
                     // to ~ from에 속하는 데이터인지 확인한다.
@@ -154,7 +155,7 @@ namespace WindLidarClient
                     double s2 = (arrDt[1] - rtdDt).TotalSeconds;
 
                     //Console.WriteLine(arrDt[0] + ", " + arrDt[1]);
-                    //Console.WriteLine("staName : " + staName + ", rtd : " + file + ", s1 : " + s1 + ", s2 : " + s2);
+                   // Console.WriteLine("staName : " + staName + ", rtd : " + file + ", s1 : " + s1 + ", s2 : " + s2);
 
                     if (s1 <= 0 && s2 >= 0)         // 해당 시간내에 속한 파일이다.
                     {
@@ -477,8 +478,8 @@ namespace WindLidarClient
             toDt = year + "-" + mon + "-" + d1 + " " + h1 + ":" + m1 + ":" + s1;
             fromDt = year + "-" + mon + "-" + d2 + " " + h2 + ":" + m2 + ":" + s2;
 
-            Console.WriteLine("toDt : " + toDt);
-            Console.WriteLine("fromDt : " + fromDt);
+           // Console.WriteLine("toDt : " + toDt);
+           // Console.WriteLine("fromDt : " + fromDt);
 
             DateTime[] arr = new DateTime[2];
             arr[0] =  DateTime.ParseExact(toDt, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
@@ -500,7 +501,7 @@ namespace WindLidarClient
             m1 = data.Substring(6, 2);
             s1 = data.Substring(9, 2);
             dt = year + "-" + mon + "-" + d1 + " " + h1 + ":" + m1 + ":" + s1;
-            //Console.WriteLine(dt);
+           // Console.WriteLine("convertTimeExtract : " +dt);
 
 
             return DateTime.ParseExact(dt, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
