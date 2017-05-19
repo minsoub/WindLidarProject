@@ -25,6 +25,15 @@ namespace WindLidarClient
         {
             public string fileName;
             public string fullFileName;
+            public string startTime;
+            public string endTime;
+
+            public string iniFile;
+            public string iniFullName;
+            public string rawFile;
+            public string rawFullName;
+            public string rtdFile;
+            public string rtdFullName;
         }
 
         public SndDataInfo()

@@ -49,6 +49,7 @@ namespace WindLidarClient
         {
 
             // 데이터 날짜 체크
+            SndDataInfo.sFileInfo info = mData.lstInfo[0];
             string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
             if (FtpDirectoryExists(ftp_url) == false)
             {
@@ -57,25 +58,32 @@ namespace WindLidarClient
             }
 
             // Ini 파일 전송
-            string ftpPath = ftp_url + "/" + mData.iniFileName;
-            if (sendData(ftpPath, mData.iniFullFileName))
+            string ftpPath = ftp_url + "/" + info.iniFile;   //  mData.iniFileName;
+            if (sendData(ftpPath, info.iniFullName))   //  mData.iniFullFileName))
             {
                 mData.sendCount++;
             }
             
             // rtd 파일 전송
-            foreach (SndDataInfo.sFileInfo sInfo in mData.lstInfo)
-            {
-                ftpPath = ftp_url + "/" + sInfo.fileName;
-                if (sendData(ftpPath, sInfo.fullFileName))
+            //foreach (SndDataInfo.sFileInfo sInfo in mData.lstInfo)
+            //{
+            ftpPath = ftp_url + "/" + info.rtdFile;  //  sInfo.fileName;
+                if (sendData(ftpPath, info.rtdFullName))   // sInfo.fullFileName))
                 {
                     mData.sendCount++;
                 }
+            //}
+            // raw 파일 전송
+            ftpPath = ftp_url + "/" + info.rawFile;   //  mData.iniFileName;
+            if (sendData(ftpPath, info.rawFullName))   //  mData.iniFullFileName))
+            {
+                mData.sendCount++;
             }
-
             // sta 파일 전송
-            ftpPath = ftp_url + "/" + mData.staFileName;
-            if (sendData(ftpPath, mData.staFullFileName))
+            string sndName = info.fileName.Replace("snd", "sta");
+            ftpPath = ftp_url + "/" + sndName;  //  확장자 변경해야 된다.
+
+            if (sendData(ftpPath, info.fullFileName))  // mData.staFullFileName))
             {
                 mData.sendCount++;
             }
