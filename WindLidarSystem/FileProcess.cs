@@ -33,10 +33,13 @@ namespace WindLidarSystem
             sendInfo.iniFileName = null;
             sendInfo.fileCount = 0;
         }
+        /**
+         * 파일전송 UDP 메시지를 수신한다.
+         */
         public bool fileStsUpdate(string msg, string client_ip)
         {
             bool result = false;
-            //FT:관측소ID:IP ADDR:시작시각:종료시각:파일개수:파일명:P1:P2:P3:P4:P5:S  => START
+            //FT:관측소ID:IP ADDR:시작시각:종료시각:파일개수:STA파일명:INI파일명:RAW파일명:RTD파일명:P1:P2:P3:P4:P5:P6:S  => START
             //FT:관측소ID:IP ADDR:시작시각:종료시각:총개수:파일명:E => END
             logMsg("[ FileProcess::fileStsUpdate ] received msg : " + msg);
 
@@ -80,7 +83,7 @@ namespace WindLidarSystem
                     }
                     else
                     {
-                        if (arrMsg.Length == 14)        // start message
+                        if (arrMsg.Length == 17)        // start message
                         {
                             string st_time = "";
                             string et_time = "";
@@ -97,9 +100,9 @@ namespace WindLidarSystem
                             );
 
                             // sts insert
-                            sql = String.Format("insert into T_RCV_STS (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, reg_dt) values"
-                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,  '{5}', current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6]
+                            sql = String.Format("insert into T_RCV_STS (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, ini_name, raw_name, rtd_name, reg_dt) values"
+                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,  '{5}', '{6}', '{7}', '{8}',  current_timestamp ) ",
+                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8], arrMsg[9]
                             );
                             oCmd = new MySqlCommand(sql, conn);
                             oCmd.ExecuteNonQuery();
@@ -107,7 +110,7 @@ namespace WindLidarSystem
                             // ini insert
                             sql = String.Format("insert into T_RCV_PARAM_INFO (s_code, st_time, et_time, p_type, p_pam1, p_pam2, p_pam3, p_pam4, avt_tm, reg_dt) values"
                             + " ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[7], arrMsg[8], arrMsg[9], arrMsg[10], arrMsg[11], arrMsg[12]
+                            arrMsg[1], st_time, et_time, arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14], arrMsg[15]
                             );
                             oCmd = new MySqlCommand(sql, conn);
                             oCmd.ExecuteNonQuery();
@@ -150,7 +153,7 @@ namespace WindLidarSystem
                 using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
                 {
                     // 작업처리하지 않은건(s_chk='N')과 받은 파일 개수가 0개 이상인 건을 조회해서 작업을 수행한다.
-                    sql = "select no, s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, reg_dt from T_RCV_STS ";
+                    sql = "select no, s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, ini_name, raw_name, rtd_name, reg_dt from T_RCV_STS ";
                     sql += " where s_chk='N' and acc_file_cnt > 0 and err_chk = 'N' order by reg_dt asc limit 0, 1";
 
                     oCmd = new MySqlCommand(sql, conn);
@@ -168,7 +171,9 @@ namespace WindLidarSystem
                         stsInfo.s_chk = rs.GetString("s_chk");
                         stsInfo.srv_file_cnt = rs.GetInt32("srv_file_cnt");
                         stsInfo.f_name = rs.GetString("f_name");
-
+                        stsInfo.ini_name = rs.GetString("ini_name");
+                        stsInfo.raw_name = rs.GetString("raw_name");
+                        stsInfo.rtd_name = rs.GetString("rtd_name");
                     }
                     rs.Close();
                     rs = null;
@@ -323,15 +328,22 @@ namespace WindLidarSystem
             clear();
 
             // 구조체에서 파일 정보를 얻는다.
-            // 10_08_55_00_-_10_09_00_58.sta
+            // 10_08_55_00.sta
             // yyyy-mm-dd
+            //public string f_name;
+            //public string ini_name;
+            //public string raw_name;
+            //public string rtd_name;
 
             string year = info.st_time.Substring(0, 4);
             string mon = info.st_time.Substring(5, 2);
             string day = info.st_time.Substring(8, 2); 
 
             string dataPath = Path.Combine(m_sourceDir, info.s_code, year, mon, day);
-
+            sendInfo.path = dataPath;
+            sendInfo.m_year = year;
+            sendInfo.m_mon = mon;
+            sendInfo.m_day = day;
 
             // 디렉토리 내에 파일이 존재하는지 체크한다.
             if (Directory.Exists(dataPath) == false)
@@ -341,81 +353,38 @@ namespace WindLidarSystem
                 return false;
             }
 
-            string staName = Path.GetFileNameWithoutExtension(info.f_name);  // 10_08_55_00_-_10_09_00_58
-            DateTime[] arrDt = fromDateTimeExtract(staName);
-
-            DirectoryInfo dir = new DirectoryInfo(dataPath);
-            int cnt = 0;
-            sendInfo.path = dataPath;
-            sendInfo.m_year = year;
-            sendInfo.m_mon = mon;
-            sendInfo.m_day = day;
-
-            //Console.WriteLine("fname : " + info.f_name);
-            foreach (FileInfo fi in dir.GetFiles().OrderBy(fi => fi.CreationTime))      // 날짜순 정렬
+            // sta check
+            string stsFull = Path.Combine(dataPath, info.f_name);
+            if (File.Exists(stsFull))
             {
-                string file = fi.FullName;
-                string ext = Path.GetExtension(file);
-
-                //Console.WriteLine("fi : " + fi.Name + ", " + fi.FullName);
-               
-                if (ext == ".sta" && fi.Name == info.f_name)
-                {
-                    sendInfo.staFileName = fi.Name;
-                    sendInfo.staFullFileName = file;
-                    sendInfo.fileCount++;
-                    cnt++;
-
-                    if (sendInfo.fileCount == 2) break;
-                }
-                if (ext == ".ini")
-                {
-                    DateTime rtdDt = convertTimeExtract(fi.Name);
-
-                    // to ~ from에 속하는 데이터인지 확인한다.
-                    double s1 = (arrDt[0] - rtdDt).TotalSeconds;
-                    double s2 = (arrDt[1] - rtdDt).TotalSeconds;
-
-                    if (s1 <= 0 && s2 >= 0)         // 해당 시간내에 속한 파일이다.
-                    {
-                        sendInfo.iniFileName = fi.Name;
-                        sendInfo.iniFullFileName = file;
-                        sendInfo.fileCount++;
-
-                       if (sendInfo.fileCount == 2) break;
-                    }
-                }
+                sendInfo.staFileName = info.f_name;
+                sendInfo.staFullFileName = stsFull;
+                sendInfo.fileCount++;
             }
-            if (cnt == 0)
+            // ini check
+            string iniFull = Path.Combine(dataPath, info.ini_name);
+            if (File.Exists(iniFull))
             {
-                logMsg("[FileProcess::HasWritePermissionOnDir] Upload data does not exists[cnt="+cnt+"]");
-                return false;
+                sendInfo.iniFileName = info.ini_name;
+                sendInfo.iniFullFileName = iniFull;
+                sendInfo.fileCount++;
             }
-
-            // rtd 파일 읽기
-            foreach (FileInfo fi in dir.GetFiles().OrderBy(fi => fi.CreationTime))      // 날짜순 정렬
+            // raw check
+            string rawFull = Path.Combine(dataPath, info.raw_name);
+            if (File.Exists(rawFull))
             {
-                string file = fi.FullName;
-                string ext = Path.GetExtension(file);
-                if (ext == ".rtd")
-                {
-                    DateTime rtdDt = convertTimeExtract(fi.Name);
-
-                    // to ~ from에 속하는 데이터인지 확인한다.
-                    double s1 = (arrDt[0] - rtdDt).TotalSeconds;
-                    double s2 = (arrDt[1] - rtdDt).TotalSeconds;
-
-                    if (s1 <= 0 && s2 >= 0)         // 해당 시간내에 속한 파일이다.
-                    {
-                        sendInfo.fileCount++;
-                        SndDataInfo.sFileInfo sf = new SndDataInfo.sFileInfo();
-                        sf.fileName = fi.Name;
-                        sf.fullFileName = file;
-                        sendInfo.lstInfo.Add(sf);
-                    }
-                }
+                sendInfo.rawFileName = info.raw_name;
+                sendInfo.rawFullFileName = rawFull;
+                sendInfo.fileCount++;
             }
-
+            // rtd check
+            string rtdFull = Path.Combine(dataPath, info.rtd_name);
+            if (File.Exists(rtdFull))
+            {
+                sendInfo.rtdFileName = info.rtd_name;
+                sendInfo.rtdFullFileName = rtdFull;
+                sendInfo.fileCount++;
+            }
             return true;
         }
 
@@ -464,12 +433,16 @@ namespace WindLidarSystem
                 iniFile.MoveTo(destFileName);
 
                 // rtd 파일 이동
-                foreach (SndDataInfo.sFileInfo sInfo in sendInfo.lstInfo)
-                {
-                    destFileName = Path.Combine(backupPath, sInfo.fileName);
-                    FileInfo rtdFile = new FileInfo(sInfo.fullFileName);
-                    rtdFile.MoveTo(destFileName);
-                }
+                destFileName = Path.Combine(backupPath, sendInfo.rtdFileName);
+                FileInfo rtdFile = new FileInfo(sendInfo.rtdFullFileName);
+                rtdFile.MoveTo(destFileName);
+
+                // raw 파일 이동
+                destFileName = Path.Combine(backupPath, sendInfo.rawFileName);
+                FileInfo rawFile = new FileInfo(sendInfo.rawFullFileName);
+                rawFile.MoveTo(destFileName);
+
+
                 // sta 파일 이동
                 destFileName = Path.Combine(backupPath, sendInfo.staFileName);  
                 FileInfo staFile = new FileInfo(sendInfo.staFullFileName);

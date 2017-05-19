@@ -67,17 +67,18 @@ namespace WindLidarSystem
             {
                 mData.sendCount++;
             }
-            
-            // rtd 파일 전송
-            foreach (SndDataInfo.sFileInfo sInfo in mData.lstInfo)
+            // rtd 파일전송
+            ftpPath = ftp_url + "/" + mData.rtdFileName;
+            if (sendData(ftpPath, mData.rtdFullFileName))
             {
-                ftpPath = ftp_url + "/" + sInfo.fileName;
-                if (sendData(ftpPath, sInfo.fullFileName))
-                {
-                    mData.sendCount++;
-                }
+                mData.sendCount++;
             }
-
+            // raw 파일전송
+            ftpPath = ftp_url + "/" + mData.rawFileName;
+            if (sendData(ftpPath, mData.rawFullFileName))
+            {
+                mData.sendCount++;
+            }
             // sta 파일 전송
             ftpPath = ftp_url + "/" + mData.staFileName;
             if (sendData(ftpPath, mData.staFullFileName))
