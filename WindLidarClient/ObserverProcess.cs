@@ -285,9 +285,9 @@ namespace WindLidarClient
                                         {
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
-
+                                            dataProcess.tmpSave(m_sourcePath);
                                             double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
-                                            if (s1 > ( 60 * 60 * 2))        // 읽은 데이터가 현재보다 2시간 이전 데이터이면 오래된 데이터이므로
+                                            if (s1 > ( 60 * 19))        // 읽은 데이터가 현재보다 19분 이전 데이터이면 오래된 데이터이므로
                                             {
                                                 old_data = true;
                                             }
@@ -315,11 +315,11 @@ namespace WindLidarClient
                     }
                     if (old_data == false)
                     {
-                        waitHandle.WaitOne(1000 * m_sleep_time);  // 1 minute
+                        waitHandle.WaitOne(1000 * m_sleep_time * 10);  // 10 minute
                     }
                     else
                     {
-                        waitHandle.WaitOne(1000 * 10);  // 10 second
+                        waitHandle.WaitOne(1000 * 30);  // 30 second
                     }
                 }
             }

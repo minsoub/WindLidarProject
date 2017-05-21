@@ -19,6 +19,9 @@ namespace WindLidarSystem
         public string s_chk;   // real filename (minute)
         public int srv_file_cnt;
         public string f_name;
+        public string ini_name;
+        public string raw_name;
+        public string rtd_name;
 
 
         public StsInfo()

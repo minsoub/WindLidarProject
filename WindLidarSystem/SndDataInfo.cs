@@ -13,6 +13,10 @@ namespace WindLidarSystem
         public string staFullFileName;
         public string iniFileName;
         public string iniFullFileName;
+        public string rawFileName;
+        public string rawFullFileName;
+        public string rtdFileName;
+        public string rtdFullFileName;
         public int fileCount;
         public int sendCount;
         public string type;

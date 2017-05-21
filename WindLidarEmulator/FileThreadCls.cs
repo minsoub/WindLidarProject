@@ -221,12 +221,14 @@ namespace WindLidarEmulator
                     String checkRawFile = currentDir + "\\" + rawCurrentFile;
                     String checkIniFile = currentDir + "\\" + iniCurrentFile;
 
-                    log("sta file write start : " + checkFile);
+                    
                     string dateKey = yy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss;
 
                     // 파일에 출력할 타임이라면..
                     if (print % 5 == 0)
                     {
+                        log("rtd file write start : " + checkFile);
+
                         // rtd file
                         if (!File.Exists(checkFile))
                         {
