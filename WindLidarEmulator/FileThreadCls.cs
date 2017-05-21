@@ -26,7 +26,7 @@ namespace WindLidarEmulator
         private string m_sector_size;
         private string m_scanning_speed;
         private string m_site;
-        private string sourcePath = "C:\\KoreaLidar";
+        private string sourcePath = "D:\\KoreaLidar";
         private delegate void LogMessageCallback(String msg);
         private static int sector_unit = 0;
         private string st_tm;
@@ -66,8 +66,8 @@ namespace WindLidarEmulator
         {
             isShutdown = false;
 
-            //ftsThread = new Thread(new ThreadStart(FileCreateProcess));
-            //ftsThread.Start();
+            ftsThread = new Thread(new ThreadStart(FileCreateProcess));
+            ftsThread.Start();
 
             stsThread = new Thread(new ThreadStart(StsCreateProcess));
             stsThread.Start();
