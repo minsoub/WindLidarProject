@@ -79,9 +79,30 @@ namespace WindLidarClient
             {
                 mData.sendCount++;
             }
+
+            log.Log("[ FtpSend ] FTP URI : " + ftpPath);
+
+            return mData.sendCount;
+        }
+
+        /**
+         * FTP Server에 STA 데이터를 전송한다.
+         * 원하는 디렉토리를 생성해서 데이터를 전송한다.
+         */
+        public int sendStaDataToFtpServer()
+        {
+
+            // 데이터 날짜 체크
+            SndDataInfo.sFileInfo info = mData.lstInfo[0];
+            string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
+            if (FtpDirectoryExists(ftp_url) == false)
+            {
+                log.Log("FTP Server : Directory create error......");
+                return 0;
+            }
             // sta 파일 전송
             string sndName = info.fileName.Replace("snd", "sta");
-            ftpPath = ftp_url + "/" + sndName;  //  확장자 변경해야 된다.
+            string ftpPath = ftp_url + "/" + sndName;  //  확장자 변경해야 된다.
 
             if (sendData(ftpPath, info.fullFileName))  // mData.staFullFileName))
             {

@@ -24,7 +24,7 @@ namespace WindLidarSystem
         public string m_year;
         public string m_mon;
         public string m_day;
-
+        public int mode;
         public struct sFileInfo
         {
             public string fileName;
@@ -45,6 +45,7 @@ namespace WindLidarSystem
             fileCount = 0;
             sendCount = 0;
             type = "";
+            mode = -1;
         }
     }
 }

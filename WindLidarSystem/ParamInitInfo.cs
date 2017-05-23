@@ -19,6 +19,7 @@ namespace WindLidarSystem
         public string m_clientRcvPort;
         public string m_dataclientport;
         public string m_localPort;
+        public string m_staclientport;
 
         public string m_dbName;
         public string m_dbUser;
@@ -44,6 +45,7 @@ namespace WindLidarSystem
             m_listenPort = iniFS.Read("ListenPort");
             m_clientRcvPort = iniFS.Read("ClientPort");
             m_dataclientport = iniFS.Read("DataClientPort");
+            m_staclientport = iniFS.Read("StaClientPort");
             m_localPort = iniFS.Read("LocalPort");
 
             m_dbName = iniFS.Read("DB_NAME");

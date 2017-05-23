@@ -23,6 +23,7 @@ namespace WindLidarClient
         private string m_site_code;
         protected int m_st_rcv_port;
         protected int m_ft_rcv_port;
+        protected int m_at_rcv_port;
         private Point mousePoint;
         private const int cGrip = 16;      // Grip size
         private const int cCaption = 62;  // 2;   // Caption bar height;
@@ -57,6 +58,7 @@ namespace WindLidarClient
             m_sndLocalPort = myIniFile.Read("SndLocalPort");
             m_st_rcv_port = System.Convert.ToInt32(myIniFile.Read("ST_RCV_PORT"));
             m_ft_rcv_port = System.Convert.ToInt32(myIniFile.Read("FT_RCV_PORT"));
+            m_at_rcv_port = System.Convert.ToInt32(myIniFile.Read("AT_RCV_PORT"));
             btnStart.Enabled = true;
             btnStop.Enabled = false;
 
@@ -130,7 +132,7 @@ namespace WindLidarClient
                 process.setStPort(txtStPort.Text);
                 process.setStCode(txtStCode.Text);
 
-                process.setSndLocalPort(m_sndLocalPort, m_st_rcv_port, m_ft_rcv_port);
+                process.setSndLocalPort(m_sndLocalPort, m_st_rcv_port, m_ft_rcv_port, m_at_rcv_port);
 
                 txtIP.ReadOnly = true;
                 txtPort.ReadOnly = true;

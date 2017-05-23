@@ -22,7 +22,7 @@ namespace WindLidarSystem
         public string ini_name;
         public string raw_name;
         public string rtd_name;
-
+        public int mode;   // 0 : STA, 1 : RAW, RTD, INI
 
         public StsInfo()
         {

@@ -39,7 +39,7 @@ namespace WindLidarSystem
         public bool fileStsUpdate(string msg, string client_ip)
         {
             bool result = false;
-            //FT:관측소ID:IP ADDR:시작시각:종료시각:파일개수:STA파일명:INI파일명:RAW파일명:RTD파일명:P1:P2:P3:P4:P5:P6:S  => START
+            //FT:관측소ID:IP ADDR:시작시각:종료시각:파일개수:INI파일명:RAW파일명:RTD파일명:P1:P2:P3:P4:P5:P6:S  => START
             //FT:관측소ID:IP ADDR:시작시각:종료시각:총개수:파일명:E => END
             logMsg("[ FileProcess::fileStsUpdate ] received msg : " + msg);
 
@@ -70,7 +70,7 @@ namespace WindLidarSystem
                         );
 
 
-                        sql = String.Format("UPDATE T_RCV_STS set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
+                        sql = String.Format("UPDATE T_RCV_FILE set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
                         arrMsg[5], arrMsg[1], st_time, et_time
                         );
 
@@ -83,7 +83,7 @@ namespace WindLidarSystem
                     }
                     else
                     {
-                        if (arrMsg.Length == 17)        // start message
+                        if (arrMsg.Length == 16)        // start message
                         {
                             string st_time = "";
                             string et_time = "";
@@ -100,9 +100,9 @@ namespace WindLidarSystem
                             );
 
                             // sts insert
-                            sql = String.Format("insert into T_RCV_STS (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, ini_name, raw_name, rtd_name, reg_dt) values"
-                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,  '{5}', '{6}', '{7}', '{8}',  current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8], arrMsg[9]
+                            sql = String.Format("insert into T_RCV_FILE (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt) values"
+                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,   '{5}', '{6}', '{7}',  current_timestamp ) ",
+                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8]
                             );
                             oCmd = new MySqlCommand(sql, conn);
                             oCmd.ExecuteNonQuery();
@@ -110,7 +110,7 @@ namespace WindLidarSystem
                             // ini insert
                             sql = String.Format("insert into T_RCV_PARAM_INFO (s_code, st_time, et_time, p_type, p_pam1, p_pam2, p_pam3, p_pam4, avt_tm, reg_dt) values"
                             + " ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14], arrMsg[15]
+                            arrMsg[1], st_time, et_time, arrMsg[9], arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14]
                             );
                             oCmd = new MySqlCommand(sql, conn);
                             oCmd.ExecuteNonQuery();
@@ -140,6 +140,106 @@ namespace WindLidarSystem
             return result;
         }
 
+
+        /**
+         * STA 파일에 대해서 전송 메시지를 저장한다.
+         */
+        public bool fileStaUpdate(string msg, string client_ip)
+        {
+            bool result = false;
+            // AT : 관측소 ID : IP ADDR : 시작시각 : 종료시각 : 파일개수 : sta파일명 : S  => START
+            // AT : 관측소 ID : IP ADDR : 시작시각 : 종료시각 : 총개수 : 파일명 : E => END
+            logMsg("[ FileProcess::fileStaUpdate ] received msg : " + msg);
+
+            // Database에 등록한다.
+            MySqlCommand oCmd = null;
+            string sql = "";
+            try
+            {
+                using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
+                {
+                    char[] splitData = { ':' };
+                    string[] arrMsg = msg.Split(splitData);
+
+                    if (arrMsg[7] == "E")       // End Message
+                    {
+                        string st_time = "";
+                        string et_time = "";
+                        char[] splitSt = { '_' };
+
+
+                        string[] arrTime1 = arrMsg[3].Split(splitSt);
+                        st_time = String.Format("{0}-{1}-{2} {3}:{4}:{5}",
+                            arrTime1[0], arrTime1[1], arrTime1[2], arrTime1[3], arrTime1[4], arrTime1[5]
+                        );
+                        string[] arrTime2 = arrMsg[4].Split(splitSt);
+                        et_time = String.Format("{0}-{1}-{2} {3}:{4}:{5}",
+                            arrTime2[0], arrTime2[1], arrTime2[2], arrTime2[3], arrTime2[4], arrTime2[5]
+                        );
+
+
+                        sql = String.Format("UPDATE T_RCV_STA set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
+                        arrMsg[5], arrMsg[1], st_time, et_time
+                        );
+
+                        logMsg(sql);
+                        oCmd = new MySqlCommand(sql, conn);
+                        oCmd.ExecuteNonQuery();
+
+                        udpOkStaSend(arrMsg[1], arrMsg[2], client_ip);
+
+                    }
+                    else
+                    {
+                        if (arrMsg[7] == "S")       //  start message
+                        {
+                            string st_time = "";
+                            string et_time = "";
+                            char[] splitSt = { '_' };
+
+
+                            string[] arrTime1 = arrMsg[3].Split(splitSt);
+                            st_time = String.Format("{0}-{1}-{2} {3}:{4}:{5}",
+                                arrTime1[0], arrTime1[1], arrTime1[2], arrTime1[3], arrTime1[4], arrTime1[5]
+                            );
+                            string[] arrTime2 = arrMsg[4].Split(splitSt);
+                            et_time = String.Format("{0}-{1}-{2} {3}:{4}:{5}",
+                                arrTime2[0], arrTime2[1], arrTime2[2], arrTime2[3], arrTime2[4], arrTime2[5]
+                            );
+
+                            // STA insert
+                            sql = String.Format("insert into T_RCV_STA (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name,  reg_dt) values"
+                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,  '{5}',  current_timestamp ) ",
+                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6]
+                            );
+                            oCmd = new MySqlCommand(sql, conn);
+                            oCmd.ExecuteNonQuery();
+
+                            udpOkStaSend(arrMsg[1], arrMsg[2], client_ip);
+                        }
+                        else
+                        {
+                            log.Log("[ FileProcess::fileStaUpdate ] received error msg : " + msg);
+                            logMsg("[ FileProcess::fileStaUpdate ] received error msg : " + msg);
+                            result = false;
+                        }
+                    }
+
+                    result = true;
+                }
+            }
+            catch (MySqlException e)
+            {
+                log.Log("[FileProcess::fileStaUpdate] error : " + e.Message);
+                logMsg("[FileProcess::fileStaUpdate] error : " + e.Message);
+                Console.WriteLine(e.Message);
+
+                result = false;
+            }
+
+            return result;
+        }
+
         /**
          * 데이터베이스를 조회해서 StsInfo 구조체에 데이터를 담아서 리턴한다.
          */
@@ -153,7 +253,57 @@ namespace WindLidarSystem
                 using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
                 {
                     // 작업처리하지 않은건(s_chk='N')과 받은 파일 개수가 0개 이상인 건을 조회해서 작업을 수행한다.
-                    sql = "select no, s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, ini_name, raw_name, rtd_name, reg_dt from T_RCV_STS ";
+                    sql = "select no, s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt from T_RCV_FILE ";
+                    sql += " where s_chk='N' and acc_file_cnt > 0 and err_chk = 'N' order by reg_dt asc limit 0, 1";
+
+                    oCmd = new MySqlCommand(sql, conn);
+                    MySqlDataReader rs = oCmd.ExecuteReader();
+                    while (rs.Read())
+                    {
+                        stsInfo = new StsInfo();
+                        stsInfo.no = rs.GetInt32("no");
+                        stsInfo.s_code = rs.GetString("s_code");
+                        stsInfo.st_time = rs.GetString("st_time");
+                        stsInfo.et_time = rs.GetString("et_time");
+                        stsInfo.read_file_cnt = rs.GetInt32("real_file_cnt");
+                        stsInfo.acc_file_cnt = rs.GetInt32("acc_file_cnt");
+                        stsInfo.err_chk = rs.GetString("err_chk");
+                        stsInfo.s_chk = rs.GetString("s_chk");
+                        stsInfo.srv_file_cnt = rs.GetInt32("srv_file_cnt");
+                        stsInfo.ini_name = rs.GetString("ini_name");
+                        stsInfo.raw_name = rs.GetString("raw_name");
+                        stsInfo.rtd_name = rs.GetString("rtd_name");
+                        stsInfo.mode = 1;
+                    }
+                    rs.Close();
+                    rs = null;
+                    oCmd = null;
+                }
+            }
+            catch (MySqlException e)
+            {
+                log.Log("[FileProcess::getRcvDataInfo] error : " + e.Message);
+                logMsg("[FileProcess::getRcvDataInfo] error : " + e.Message);
+            }
+
+            return stsInfo;
+        }
+
+        /**
+         * STA 파일에 대해서 전송할 데이터가 있는지 데이터베이스에 조회한다.
+         * T_RCV_STA
+         */
+        public StsInfo getStaRcvDataInfo()
+        {
+            MySqlCommand oCmd = null;
+            StsInfo stsInfo = null;
+            string sql = "";
+            try
+            {
+                using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
+                {
+                    // 작업처리하지 않은건(s_chk='N')과 받은 파일 개수가 0개 이상인 건을 조회해서 작업을 수행한다.
+                    sql = "select no, s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name, reg_dt from T_RCV_STA ";
                     sql += " where s_chk='N' and acc_file_cnt > 0 and err_chk = 'N' order by reg_dt asc limit 0, 1";
 
                     oCmd = new MySqlCommand(sql, conn);
@@ -171,9 +321,7 @@ namespace WindLidarSystem
                         stsInfo.s_chk = rs.GetString("s_chk");
                         stsInfo.srv_file_cnt = rs.GetInt32("srv_file_cnt");
                         stsInfo.f_name = rs.GetString("f_name");
-                        stsInfo.ini_name = rs.GetString("ini_name");
-                        stsInfo.raw_name = rs.GetString("raw_name");
-                        stsInfo.rtd_name = rs.GetString("rtd_name");
+                        stsInfo.mode = 0;
                     }
                     rs.Close();
                     rs = null;
@@ -182,20 +330,18 @@ namespace WindLidarSystem
             }
             catch (MySqlException e)
             {
-                log.Log("[FileProcess::getRcvDataInfo] error : " + e.Message);
-                logMsg("[FileProcess::getRcvDataInfo] error : " + e.Message);
+                log.Log("[FileProcess::getStaRcvDataInfo] error : " + e.Message);
+                logMsg("[FileProcess::getStaRcvDataInfo] error : " + e.Message);
             }
 
             return stsInfo;
         }
 
-
-
         public void udpOkSend(string s_code, string host, string client_ip)
         {
             // Client에 전송한다.
-            int localPort = System.Convert.ToInt32(ParamInitInfo.Instance.m_localPort);        // 10004
-            int sndPort = System.Convert.ToInt32(ParamInitInfo.Instance.m_dataclientport);
+            int localPort = System.Convert.ToInt32(ParamInitInfo.Instance.m_localPort);        // 10005
+            int sndPort = System.Convert.ToInt32(ParamInitInfo.Instance.m_dataclientport);     // 10003
 
             string sndMsg = "FT:" + s_code + ":" + host + ":ok";
             byte[] buf = Encoding.ASCII.GetBytes(sndMsg);
@@ -207,6 +353,73 @@ namespace WindLidarSystem
             }
         }
 
+        public void udpOkStaSend(string s_code, string host, string client_ip)
+        {
+            // Client에 전송한다.
+            int localPort = System.Convert.ToInt32(ParamInitInfo.Instance.m_localPort);        // 10005
+            int sndPort = System.Convert.ToInt32(ParamInitInfo.Instance.m_staclientport);      // 10004
+
+            string sndMsg = "AT:" + s_code + ":" + host + ":ok";
+            byte[] buf = Encoding.ASCII.GetBytes(sndMsg);
+
+            using (UdpClient c = new UdpClient(localPort + 1))  // source port (로컬 포트에서 상태 포트를 하나 사용하므로 중복이 발생하므로 사용포트 - 1)
+            {
+                c.Send(buf, buf.Length, client_ip, sndPort);
+                logMsg("[FileProcess::udpOkSend] Send Msg [host : " + client_ip + " : " + sndPort + " : " + sndMsg);
+            }
+        }
+
+        /**
+         * STA파일을 FTP 서버에 전송한다.
+         */
+        public bool ftpStaSendData(StsInfo info)
+        {
+            bool result = false;
+
+            sendInfo = new SndDataInfo();
+
+            // FTP 전송할 파일을 읽어 들인다.
+            bool ok = HasWritePermissionOnDir(info);
+
+            if (ok == true)
+            {
+                setSendData(sendInfo);
+
+                int sendCount = sendStaDataToFtpServer();      // FTP에 전송하고 전송된 개수를 리턴 받는다.
+
+                info.srv_file_cnt = sendCount;
+
+                if (databaseSendUpdate(info) == true)
+                {
+                    logMsg("[ftpSendData] The data is successfully updated.[" + info.s_code + "]");
+
+                    if (FileMoveProcess(info) == true)
+                    {
+                        logMsg("[ftpSendData] The data is successfully moved in the backup directory.[" + info.s_code + "]");
+                        result = true;
+                    }
+                    else
+                    {
+                        logMsg("[ftpSendData] The job moving to the backup directory is not successed.[" + info.s_code + "]");
+                        result = false;
+                    }
+                }
+                else
+                {
+                    logMsg("[ftpSendData] The update is not successed.[" + info.s_code + "]");
+
+                    result = false;
+                }
+            }
+            else
+            {
+                logMsg("[ftpSendData] File is not exists...[" + info.s_code + "]");
+                result = false;
+            }
+
+            return result;
+
+        }
         /**
          * FTP Server에 데이터를 전송한다.
          */
@@ -215,6 +428,7 @@ namespace WindLidarSystem
             bool result = false;
 
             sendInfo = new SndDataInfo();
+            sendInfo.mode = info.mode;
 
             // FTP 전송할 파일을 읽어 들인다.
             bool ok = HasWritePermissionOnDir(info);
@@ -271,7 +485,13 @@ namespace WindLidarSystem
             {
                 using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
                 {
-                    sql = String.Format("update T_RCV_STS set s_chk='Y', srv_file_cnt={0}, upt_dt=current_timestamp where no={1}", info.srv_file_cnt, info.no);
+                    if (info.mode == 0)
+                    {
+                        sql = String.Format("update T_RCV_STA set s_chk='Y', srv_file_cnt={0}, upt_dt=current_timestamp where no={1}", info.srv_file_cnt, info.no);
+                    }else
+                    {
+                        sql = String.Format("update T_RCV_FILE set s_chk='Y', srv_file_cnt={0}, upt_dt=current_timestamp where no={1}", info.srv_file_cnt, info.no);
+                    }
                     oCmd = new MySqlCommand(sql, conn);
                     oCmd.ExecuteNonQuery();
                     result = true;
@@ -299,7 +519,14 @@ namespace WindLidarSystem
             {
                 using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
                 {
-                    sql = String.Format("update T_RCV_STS set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                    if (info.mode == 0)
+                    {
+                        sql = String.Format("update T_RCV_FILE set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                    }
+                    else
+                    {
+                        sql = String.Format("update T_RCV_STA set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                    }
                     oCmd = new MySqlCommand(sql, conn);
                     oCmd.ExecuteNonQuery();
                     result = true;
@@ -354,36 +581,42 @@ namespace WindLidarSystem
             }
 
             // sta check
-            string stsFull = Path.Combine(dataPath, info.f_name);
-            if (File.Exists(stsFull))
+            if (info.mode == 0)     // STA
             {
-                sendInfo.staFileName = info.f_name;
-                sendInfo.staFullFileName = stsFull;
-                sendInfo.fileCount++;
+                string stsFull = Path.Combine(dataPath, info.f_name);
+                if (File.Exists(stsFull))
+                {
+                    sendInfo.staFileName = info.f_name;
+                    sendInfo.staFullFileName = stsFull;
+                    sendInfo.fileCount++;
+                }
             }
-            // ini check
-            string iniFull = Path.Combine(dataPath, info.ini_name);
-            if (File.Exists(iniFull))
+            else
             {
-                sendInfo.iniFileName = info.ini_name;
-                sendInfo.iniFullFileName = iniFull;
-                sendInfo.fileCount++;
-            }
-            // raw check
-            string rawFull = Path.Combine(dataPath, info.raw_name);
-            if (File.Exists(rawFull))
-            {
-                sendInfo.rawFileName = info.raw_name;
-                sendInfo.rawFullFileName = rawFull;
-                sendInfo.fileCount++;
-            }
-            // rtd check
-            string rtdFull = Path.Combine(dataPath, info.rtd_name);
-            if (File.Exists(rtdFull))
-            {
-                sendInfo.rtdFileName = info.rtd_name;
-                sendInfo.rtdFullFileName = rtdFull;
-                sendInfo.fileCount++;
+                // ini check
+                string iniFull = Path.Combine(dataPath, info.ini_name);
+                if (File.Exists(iniFull))
+                {
+                    sendInfo.iniFileName = info.ini_name;
+                    sendInfo.iniFullFileName = iniFull;
+                    sendInfo.fileCount++;
+                }
+                // raw check
+                string rawFull = Path.Combine(dataPath, info.raw_name);
+                if (File.Exists(rawFull))
+                {
+                    sendInfo.rawFileName = info.raw_name;
+                    sendInfo.rawFullFileName = rawFull;
+                    sendInfo.fileCount++;
+                }
+                // rtd check
+                string rtdFull = Path.Combine(dataPath, info.rtd_name);
+                if (File.Exists(rtdFull))
+                {
+                    sendInfo.rtdFileName = info.rtd_name;
+                    sendInfo.rtdFullFileName = rtdFull;
+                    sendInfo.fileCount++;
+                }
             }
             return true;
         }
@@ -426,27 +659,31 @@ namespace WindLidarSystem
                     DirectoryInfo dir4 = new DirectoryInfo(path);
                     if (dir4.Exists == false) dir4.Create();
                 }
+                string destFileName = "";
+                if (info.mode == 1)
+                {
+                    // Ini 파일 이동            
+                    destFileName = Path.Combine(backupPath, sendInfo.iniFileName);
+                    FileInfo iniFile = new FileInfo(sendInfo.iniFullFileName);
+                    iniFile.MoveTo(destFileName);
 
-                // Ini 파일 이동            
-                string destFileName = Path.Combine(backupPath, sendInfo.iniFileName);  
-                FileInfo iniFile = new FileInfo(sendInfo.iniFullFileName);
-                iniFile.MoveTo(destFileName);
+                    // rtd 파일 이동
+                    destFileName = Path.Combine(backupPath, sendInfo.rtdFileName);
+                    FileInfo rtdFile = new FileInfo(sendInfo.rtdFullFileName);
+                    rtdFile.MoveTo(destFileName);
 
-                // rtd 파일 이동
-                destFileName = Path.Combine(backupPath, sendInfo.rtdFileName);
-                FileInfo rtdFile = new FileInfo(sendInfo.rtdFullFileName);
-                rtdFile.MoveTo(destFileName);
-
-                // raw 파일 이동
-                destFileName = Path.Combine(backupPath, sendInfo.rawFileName);
-                FileInfo rawFile = new FileInfo(sendInfo.rawFullFileName);
-                rawFile.MoveTo(destFileName);
-
-
-                // sta 파일 이동
-                destFileName = Path.Combine(backupPath, sendInfo.staFileName);  
-                FileInfo staFile = new FileInfo(sendInfo.staFullFileName);
-                staFile.MoveTo(destFileName);
+                    // raw 파일 이동
+                    destFileName = Path.Combine(backupPath, sendInfo.rawFileName);
+                    FileInfo rawFile = new FileInfo(sendInfo.rawFullFileName);
+                    rawFile.MoveTo(destFileName);
+                }
+                else
+                {
+                    // sta 파일 이동
+                    destFileName = Path.Combine(backupPath, sendInfo.staFileName);
+                    FileInfo staFile = new FileInfo(sendInfo.staFullFileName);
+                    staFile.MoveTo(destFileName);
+                }
                 result = true;
             }
             catch (IOException ex)

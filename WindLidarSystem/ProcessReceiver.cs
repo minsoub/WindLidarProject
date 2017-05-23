@@ -21,8 +21,11 @@ namespace WindLidarSystem
 
         private Thread processThread;
         private Thread stsThread;
+        private Thread staThread;
+
         private ManualResetEvent waitHandle;
         private ManualResetEvent stsHandle;
+        private ManualResetEvent staHandle;
         
         private StatusProcess stsProcess;
         private FileProcess ftsProcess;
@@ -55,6 +58,8 @@ namespace WindLidarSystem
 
             waitHandle = new ManualResetEvent(false);
             stsHandle = new ManualResetEvent(false);
+            staHandle = new ManualResetEvent(false);
+
             log = new LogMessageCallback(main.logMessage);
             stsMessage = new StsMessageCallback(main.stsMessage);
             ftsMessage = new FtsMessageCallback(main.ftsMessage);
@@ -92,6 +97,9 @@ namespace WindLidarSystem
             stsThread = new Thread(new ThreadStart(StatusThreadProcess));
             stsThread.Start();
 
+            staThread = new Thread(new ThreadStart(StaThreadProcess));
+            staThread.Start();
+
             // socket async
             server.BeginReceive(ReceiverClient, null);
         }
@@ -102,7 +110,7 @@ namespace WindLidarSystem
             Thread.Sleep(1000);
             if (processThread != null) processThread.Abort();
             if (stsThread != null) stsThread.Abort();
-
+            if (staThread != null) staThread.Abort();
             // socket
             if (server != null)
             {
@@ -116,6 +124,47 @@ namespace WindLidarSystem
             almProcess = null;
         }
 
+        public void StaThreadProcess()
+        {
+            while (!isShutdown)
+            {
+                if (isShutdown == false)
+                {
+                    staHandle.Reset();
+                    // 데이터베이스에 접속해서 데이터를 가져온다.
+                    try
+                    {
+                        //if (oCon != null)
+                        //{
+                        // 하나의 Row 가져오기
+                        StsInfo fileData = ftsProcess.getStaRcvDataInfo();
+                        if (fileData != null)
+                        {
+                            // FTP 전송 - need module
+                            ftsProcess.setFtpInfo(fileData.s_code, FTP_URI, ParamInitInfo.Instance.m_ftpIP, ParamInitInfo.Instance.m_ftpPort,
+                                ParamInitInfo.Instance.m_ftpUser, ParamInitInfo.Instance.m_ftpPass);
+                            bool sts = ftsProcess.ftpSendData(fileData);
+
+                            if (sts == false)
+                            {
+                                Console.WriteLine("ftsProcess ftpSendData false...........[" + fileData.s_code + "]");
+                                ftsProcess.ftpFailUpdate(fileData);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("The transfer data is not found .......");
+                        }
+                        //}
+                    }
+                    catch (MySqlException e)
+                    {
+                        log("[ ProcessReceiver::windDataProcess(error) ] Error : " + e.Message);
+                    }
+                    staHandle.WaitOne(1000 * 60 * 10);   // 10 minute .. hour  .. System.Convert.ToInt16(ParamInitInfo.Instance.m_ftpThreadTime));  // 1 minute ( need setup)
+                }
+            }
+        }
         /**
          * 데이터베이스에 주기적으로 접속해서 데이터를 가져와서
          * FDP전송하고 데이터베이스에 다시 업데이트를 수행한다.
@@ -140,7 +189,7 @@ namespace WindLidarSystem
                                 // FTP 전송 - need module
                                 ftsProcess.setFtpInfo(fileData.s_code, FTP_URI, ParamInitInfo.Instance.m_ftpIP, ParamInitInfo.Instance.m_ftpPort,
                                     ParamInitInfo.Instance.m_ftpUser, ParamInitInfo.Instance.m_ftpPass); 
-                                bool sts = ftsProcess.ftpSendData(fileData);
+                                bool sts = ftsProcess.ftpStaSendData(fileData);
 
                                 if (sts == false)
                                 {
@@ -237,6 +286,16 @@ namespace WindLidarSystem
                         }
 
                         //ftpMessage(msg);
+                    }
+                    else if (msgArr[0] == "AT")   // FILE file start/end send check(STA)
+                    {
+                        string client_ip = RemoteIpEndPoint.Address.ToString();
+                        bool bl = ftsProcess.fileStaUpdate(msg, client_ip);
+                        if (bl == true)
+                        {
+                            log("[ ProcessReceiver::ReceiverClient(info) ] file data status update [ok] => STA");
+                            ftsMessage(msg);
+                        }
                     }
                     else if (msgArr[0] == "AM")   // Alarm message
                     {

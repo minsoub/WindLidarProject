@@ -45,7 +45,31 @@ namespace WindLidarSystem
            // mData.clear();
             mData = data;
         }
+        /**
+         * STA파일을 FDP에 전송한다.
+         */
+        public int sendStaDataToFtpServer()
+        {
 
+            // 데이터 날짜 체크
+            string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
+            if (FtpDirectoryExists(ftp_url) == false)
+            {
+                log.Log("FTP Server : Directory create error......" + ftp_url);
+                return 0;
+            }
+
+            // sta 파일 전송
+            string ftpPath = ftp_url + "/" + mData.staFileName;
+            if (sendData(ftpPath, mData.staFullFileName))
+            {
+                mData.sendCount++;
+            }
+
+            log.Log("[ FtpSend ] FTP URI : " + ftpPath);
+
+            return mData.sendCount;
+        }
         /**
          * FTP Server에 데이터를 전송한다.
          * 원하는 디렉토리를 생성해서 데이터를 전송한다.
@@ -60,30 +84,36 @@ namespace WindLidarSystem
                 log.Log("FTP Server : Directory create error......" + ftp_url);
                 return 0;
             }
-
-            // Ini 파일 전송
-            string ftpPath = ftp_url + "/" + mData.iniFileName;
-            if (sendData(ftpPath, mData.iniFullFileName))
+            string ftpPath = "";
+            if (mData.mode == 1)
             {
-                mData.sendCount++;
+                // Ini 파일 전송
+                ftpPath = ftp_url + "/" + mData.iniFileName;
+                if (sendData(ftpPath, mData.iniFullFileName))
+                {
+                    mData.sendCount++;
+                }
+                // rtd 파일전송
+                ftpPath = ftp_url + "/" + mData.rtdFileName;
+                if (sendData(ftpPath, mData.rtdFullFileName))
+                {
+                    mData.sendCount++;
+                }
+                // raw 파일전송
+                ftpPath = ftp_url + "/" + mData.rawFileName;
+                if (sendData(ftpPath, mData.rawFullFileName))
+                {
+                    mData.sendCount++;
+                }
             }
-            // rtd 파일전송
-            ftpPath = ftp_url + "/" + mData.rtdFileName;
-            if (sendData(ftpPath, mData.rtdFullFileName))
+            else
             {
-                mData.sendCount++;
-            }
-            // raw 파일전송
-            ftpPath = ftp_url + "/" + mData.rawFileName;
-            if (sendData(ftpPath, mData.rawFullFileName))
-            {
-                mData.sendCount++;
-            }
-            // sta 파일 전송
-            ftpPath = ftp_url + "/" + mData.staFileName;
-            if (sendData(ftpPath, mData.staFullFileName))
-            {
-                mData.sendCount++;
+                // sta 파일 전송
+                ftpPath = ftp_url + "/" + mData.staFileName;
+                if (sendData(ftpPath, mData.staFullFileName))
+                {
+                    mData.sendCount++;
+                }
             }
 
             log.Log("[ FtpSend ] FTP URI : " + ftpPath);

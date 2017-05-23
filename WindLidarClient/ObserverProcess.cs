@@ -18,9 +18,13 @@ namespace WindLidarClient
     {
         private WindClientForm main;
         private Thread stsThread;
+        private Thread staThread;   // STA 파일 처리 Thread
         private Thread almThread;
         private Thread fileThread;
+
+
         private ManualResetEvent waitHandle;
+        private ManualResetEvent staHandle;
         private ManualResetEvent almHandle;
         private bool isShutdown;
         private AlarmProcess alarmProcess;
@@ -59,6 +63,9 @@ namespace WindLidarClient
         protected int m_sleep_time;
         protected int m_st_rcv_port;        
         protected int m_ft_rcv_port;
+        protected int m_at_rcv_port;
+        protected string m_data1;
+        protected string m_data2;
 
         
 
@@ -71,10 +78,12 @@ namespace WindLidarClient
             m_sourcePath = myIniFile.Read("SOURCE_PATH");
             m_backupPath = myIniFile.Read("BACKUP_PATH");
             m_sleep_time = System.Convert.ToInt32(myIniFile.Read("SLEEP_TIME"));
-
+            m_data1 = myIniFile.Read("DATA1");
+            m_data2 = myIniFile.Read("DATA2");
 
             waitHandle = new ManualResetEvent(false);
             almHandle = new ManualResetEvent(false);
+            staHandle = new ManualResetEvent(false);
 
             log = new LogMessageCallback(main.logMessage);
             
@@ -92,11 +101,12 @@ namespace WindLidarClient
             log(msg);
         }
 
-        public void setSndLocalPort(string sndLocalPort, int  st_rcv_port, int ft_rcv_port)
+        public void setSndLocalPort(string sndLocalPort, int  st_rcv_port, int ft_rcv_port, int at_rcv_port)
         {
             m_cstLocalPort = System.Convert.ToInt32(sndLocalPort);
             m_st_rcv_port = st_rcv_port;
             m_ft_rcv_port = ft_rcv_port;
+            m_at_rcv_port = at_rcv_port;
         }
 
         public void setID(string id)
@@ -134,12 +144,19 @@ namespace WindLidarClient
         {
             isShutdown = false;
 
+            // 상태 데이터 전송
             stsThread = new Thread(new ThreadStart(StatusSender));
             stsThread.Start();
 
+            // 관측데이터 전송 : RAW, INI, RTD
             fileThread = new Thread(new ThreadStart(fileCheckProcess));
             fileThread.Start();
 
+            // 관측데이터 전송 : STA (1시간마다)
+            staThread = new Thread(new ThreadStart(StaCheckProcess));
+            staThread.Start();
+
+            // 알람데이터 전송
             almThread = new Thread(new ThreadStart(AlarmCheckProcess));            
             almThread.Start();
 
@@ -153,6 +170,8 @@ namespace WindLidarClient
             if (almThread != null) almThread.Abort();
 
             if (fileThread != null) fileThread.Abort();
+
+            if (staThread != null) staThread.Abort();
             // socket
         }
 
@@ -227,14 +246,109 @@ namespace WindLidarClient
             }
         }
 
+        /**
+         * STA 파일에 대해서만 체크하고 파일을 전송한다.
+         * STA 파일저장 데이터베이스를 따로 관리한다.
+         */
+        public void StaCheckProcess()
+        {
+            // 파일이 접근, 쓸 수 있는 권한을 체크한다.
+            while (!isShutdown)
+            {
+                if (isShutdown == false)   // debug : true
+                {
+                    staHandle.Reset();
+                    bool old_data = false;
+
+                    try
+                    {
+                        // 파일이 존재하고 접근, 쓸 수 있는 권한이 있는지 체크한다.
+                        // 작성 중일 때는 대기..
+                        DataProcess dataProcess = new DataProcess(this);
+                        dataProcess.clear();
+                        dataProcess.setPath(m_sourcePath, m_backupPath, m_data1, m_data2);
+                        dataProcess.setNetworkInfo(m_stCode, m_stHost, m_stPort, m_cstLocalPort, m_st_rcv_port, m_ft_rcv_port, m_at_rcv_port);
+
+                        // 전송할 파일이 있는지 체크한다.
+                        bool sts = dataProcess.StaHasWritePermissionOnDir(m_sourcePath);
+
+                        if (sts == true)
+                        {
+                            Console.WriteLine("[ StaCheckProcess ] Write enabled....");
+                            int fntCnt = 0;
+                            fntCnt = dataProcess.getSendFileCount();
+                            Console.WriteLine("fileCnt : " + fntCnt);
+
+                            startProgress(0);
+                            endProgress(fntCnt);
+
+                            // 보낼 파일 개수 상태 전송
+                            if (fntCnt > 0)
+                            {
+                                // 상태 정보 업데이트 및 상태 정보 전송 (STA 파일에 대해서 상태를 전송한다 : START)
+                                bool ok = dataProcess.startStaStatusSendData();
+
+                                if (ok)
+                                {
+                                    // FTP 데이터 전송
+                                    ok = dataProcess.StaftpSend(FTP_URI, m_host, m_port, m_id, m_pass);
+
+                                    // 데이터 백업 처리
+                                    if (ok == true)
+                                    {
+                                        log("[FileMoveProcess] called....");
+                                        if (dataProcess.FileStaMoveProcess() == true)
+                                        {
+                                            // 전송 완료 메시지 전송 및 자료 처리 완료 수신
+                                            ok = dataProcess.endStatusSendData();
+                                            dataProcess.tmpSave(m_sourcePath);
+                                            double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
+                                            if (s1 > (60 * 60))        // 읽은 데이터가 현재보다 60분 이전 데이터이면 오래된 데이터이므로
+                                            {
+                                                log("old data found................");
+                                                old_data = true;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            log("[ fileCheckProcess ] File Move fail....");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("[ StaCheckProcess ] not found data...");
+                            log("[ StaCheckProcess ] No job : not found data.......");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log("[ StaCheckProcess error ] : " + ex.ToString());
+                    }
+                    if (old_data == false)
+                    {
+                        staHandle.WaitOne(1000 * 60 * 60);  // 1 hour  m_sleep_time * 10);  // 10 minute
+                    }
+                    else
+                    {
+                        staHandle.WaitOne(1000 * 30);  // 30 second
+                    }
+                }
+            }
+        }
         /**         
          * 관측 데이터 송신 체크 쓰레드 함수
          * 전송 파일이 있는지 주기적으로 체크한다.
          * 이 쓰레드 함수는 개별적으로 돌아가는 함수이다.
          * 전송하는 데이터가 옛날 데이터라면 파이을 읽는 속도를 증가시켜
          * 이전 데이터에 대해서 서버에 빨리 전송할 수 있도록 타임아웃을 조절한다.
-         * 현재의 시간보다 2시간전 데이터이면 기존 Thread time을 적용하지 않고 
-         * 빠른 시간내에 다시 읽어서 전송할 수 있도록 한다.
+         * RAW, INI, RTD 파일에 대해서 적용한다. 
          */
         public void fileCheckProcess()
         {
@@ -252,12 +366,15 @@ namespace WindLidarClient
                         // 작성 중일 때는 대기..
                         DataProcess dataProcess = new DataProcess(this);
                         dataProcess.clear();
-                        dataProcess.setPath(m_sourcePath, m_backupPath);
-                        dataProcess.setNetworkInfo(m_stCode, m_stHost, m_stPort, m_cstLocalPort, m_st_rcv_port, m_ft_rcv_port);
+                        dataProcess.setPath(m_sourcePath, m_backupPath, m_data1, m_data2);
+                        dataProcess.setNetworkInfo(m_stCode, m_stHost, m_stPort, m_cstLocalPort, m_st_rcv_port, m_ft_rcv_port, -1);
+
+                        // 전송할 파일이 있는지 체크한다.
                         bool sts = dataProcess.HasWritePermissionOnDir(m_sourcePath);
 
                         if (sts == true)
                         {
+                            log("[ fileCheckProcess ] sts == true ");
                             Console.WriteLine("[ fileCheckProcess ] Write enabled....");
                             int fntCnt = 0;
                             fntCnt = dataProcess.getSendFileCount();
