@@ -787,11 +787,6 @@ namespace WindLidarClient
                 FileInfo rawFile = new FileInfo(info.rawFullName);
                 rawFile.MoveTo(destFileName);
 
-                // sta 파일 이동
-                destFileName = info.fullFileName.Replace("DATA", "BACKUP");
-                FileInfo staFile = new FileInfo(info.fullFileName);
-                staFile.MoveTo(destFileName);
-                result = true;
             }
             catch (IOException ex)
             {
