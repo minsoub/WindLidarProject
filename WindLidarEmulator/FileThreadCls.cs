@@ -291,7 +291,7 @@ namespace WindLidarEmulator
 
                     index++;
 
-                    if (index % 20 == 0)
+                    if (index % 100 == 0)
                     {
                         // almFile
                         AlarmFileProcess(almFile,"1");
