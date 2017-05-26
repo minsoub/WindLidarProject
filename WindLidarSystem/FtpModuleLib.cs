@@ -137,13 +137,14 @@ namespace WindLidarSystem
 
             // 입력파일을 바이트 배열로 읽음
             byte[] data;
-            using (StreamReader reader = new StreamReader(inputFile))
-            {
-                data = Encoding.UTF8.GetBytes(reader.ReadToEnd());
-            }
-
+            
             try
             {
+                using (StreamReader reader = new StreamReader(inputFile))
+                {
+                    data = Encoding.UTF8.GetBytes(reader.ReadToEnd());
+                }
+
                 // RequestStream에 데이타를 쓴다
                 req.ContentLength = data.Length;
                 using (Stream reqStream = req.GetRequestStream())
@@ -163,7 +164,7 @@ namespace WindLidarSystem
             }
             catch (WebException ex)
             {
-                Console.WriteLine("[ FtpSend ] WebException Error : " + ex.ToString());
+                Console.WriteLine("[ FtpSend ] WebException Error : " + ex.ToString() + "=>" + inputFile);
                 log.Log("[ FtpSend ] WebException error : " + ex.ToString());
                 result = false;
 

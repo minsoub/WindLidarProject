@@ -208,9 +208,12 @@ namespace WindLidarSystem
                             );
 
                             // STA insert
+                            string fileName = arrMsg[6];
+                            fileName = fileName.Replace("snd", "sta");
+
                             sql = String.Format("insert into T_RCV_STA (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name,  reg_dt) values"
                             + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,  '{5}',  current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6]
+                            arrMsg[1], st_time, et_time, arrMsg[5], 0, fileName
                             );
                             oCmd = new MySqlCommand(sql, conn);
                             oCmd.ExecuteNonQuery();
@@ -429,6 +432,7 @@ namespace WindLidarSystem
 
             sendInfo = new SndDataInfo();
             sendInfo.mode = info.mode;
+            Console.WriteLine("ftpSendData mode : " + sendInfo.mode);
 
             // FTP 전송할 파일을 읽어 들인다.
             bool ok = HasWritePermissionOnDir(info);
@@ -521,11 +525,11 @@ namespace WindLidarSystem
                 {
                     if (info.mode == 0)
                     {
-                        sql = String.Format("update T_RCV_FILE set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                        sql = String.Format("update T_RCV_FILE set err_chk='Y', upt_dt=current_timestamp where no={0}", info.no);
                     }
                     else
                     {
-                        sql = String.Format("update T_RCV_STA set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                        sql = String.Format("update T_RCV_STA set err_chk='Y', upt_dt=current_timestamp where no={0}", info.no);
                     }
                     oCmd = new MySqlCommand(sql, conn);
                     oCmd.ExecuteNonQuery();
@@ -580,15 +584,22 @@ namespace WindLidarSystem
                 return false;
             }
 
+            Console.WriteLine("HasWritePermissionOnDir mode => " + info.mode);
             // sta check
             if (info.mode == 0)     // STA
             {
                 string stsFull = Path.Combine(dataPath, info.f_name);
+
                 if (File.Exists(stsFull))
                 {
                     sendInfo.staFileName = info.f_name;
                     sendInfo.staFullFileName = stsFull;
                     sendInfo.fileCount++;
+                }
+                else
+                {
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + stsFull);
+                    return false;
                 }
             }
             else
@@ -601,6 +612,11 @@ namespace WindLidarSystem
                     sendInfo.iniFullFileName = iniFull;
                     sendInfo.fileCount++;
                 }
+                else
+                {
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + iniFull);
+                    return false;
+                }
                 // raw check
                 string rawFull = Path.Combine(dataPath, info.raw_name);
                 if (File.Exists(rawFull))
@@ -609,6 +625,11 @@ namespace WindLidarSystem
                     sendInfo.rawFullFileName = rawFull;
                     sendInfo.fileCount++;
                 }
+                else
+                {
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rawFull);
+                    return false;
+                }
                 // rtd check
                 string rtdFull = Path.Combine(dataPath, info.rtd_name);
                 if (File.Exists(rtdFull))
@@ -616,6 +637,11 @@ namespace WindLidarSystem
                     sendInfo.rtdFileName = info.rtd_name;
                     sendInfo.rtdFullFileName = rtdFull;
                     sendInfo.fileCount++;
+                }
+                else
+                {
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
+                    return false;
                 }
             }
             return true;
