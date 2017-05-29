@@ -146,7 +146,7 @@ namespace WindLidarClient
 
             // 상태 데이터 전송
             stsThread = new Thread(new ThreadStart(StatusSender));
-            stsThread.Start();
+            stsThread.Start();  
 
             // 관측데이터 전송 : RAW, INI, RTD
             fileThread = new Thread(new ThreadStart(fileCheckProcess));
@@ -409,7 +409,7 @@ namespace WindLidarClient
                                         {
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
-                                            dataProcess.tmpSave(m_sourcePath);
+                                            //dataProcess.tmpSave(m_sourcePath);
                                             double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
                                             //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
                                             if (span > (60 * 19))        // 읽은 데이터가 현재보다 19분 이전 데이터이면 오래된 데이터이므로

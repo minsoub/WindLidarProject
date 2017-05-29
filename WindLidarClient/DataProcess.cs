@@ -358,7 +358,9 @@ namespace WindLidarClient
            // sf.startTime = tmpInfo.startTime;
            // sf.endTime = tmpInfo.endTime;
 
-            foreach (FileInfo fi in dir.GetFiles().OrderBy(fi => fi.CreationTime))      // 날짜순 정렬
+            // INI, RAW, RTD 파일만 검색
+
+            foreach (FileInfo fi in dir.GetFiles("*_DBS*").OrderBy(fi => fi.Name))      // 날짜순 정렬
             {
                 string file = fi.FullName;
                 string ext = Path.GetExtension(file);
