@@ -394,16 +394,16 @@ namespace WindLidarSystem
 
                 if (databaseSendUpdate(info) == true)
                 {
-                    logMsg("[ftpSendData] The data is successfully updated.[" + info.s_code + "]");
+                    logMsg("[ftpSendData] The data is successfully updated.[" + info.f_name + "]");
 
                     if (FileMoveProcess(info) == true)
                     {
-                        logMsg("[ftpSendData] The data is successfully moved in the backup directory.[" + info.s_code + "]");
+                        logMsg("[ftpSendData] The data is successfully moved in the backup directory.[" + info.f_name + "]");
                         result = true;
                     }
                     else
                     {
-                        logMsg("[ftpSendData] The job moving to the backup directory is not successed.[" + info.s_code + "]");
+                        logMsg("[ftpSendData] The job moving to the backup directory is not successed.[" + info.f_name + "]");
                         result = false;
                     }
                 }
@@ -416,7 +416,7 @@ namespace WindLidarSystem
             }
             else
             {
-                logMsg("[ftpSendData] File is not exists...[" + info.s_code + "]");
+                logMsg("[ftpSendData] File is not exists...[" + info.f_name + "]");
                 result = false;
             }
 
@@ -566,9 +566,9 @@ namespace WindLidarSystem
             //public string raw_name;
             //public string rtd_name;
 
-            string year = info.st_time.Substring(0, 4);
-            string mon = info.st_time.Substring(5, 2);
-            string day = info.st_time.Substring(8, 2); 
+            string year = info.et_time.Substring(0, 4);
+            string mon = info.et_time.Substring(5, 2);
+            string day = info.et_time.Substring(8, 2); 
 
             string dataPath = Path.Combine(m_sourceDir, info.s_code, year, mon, day);
             sendInfo.path = dataPath;
@@ -581,6 +581,7 @@ namespace WindLidarSystem
             {
                 Console.WriteLine("Directory not exist.... : {0}", dataPath);
                 logMsg("[FileProcess::HasWritePermissionOnDir] Directory not exist.... : " + dataPath);
+                log.Log("[FileProcess::HasWritePermissionOnDir] Directory not exist.... : " + dataPath);
                 return false;
             }
 
@@ -599,6 +600,7 @@ namespace WindLidarSystem
                 else
                 {
                     Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + stsFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + stsFull);
                     return false;
                 }
             }
@@ -615,6 +617,7 @@ namespace WindLidarSystem
                 else
                 {
                     Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + iniFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + iniFull);
                     return false;
                 }
                 // raw check
@@ -628,6 +631,7 @@ namespace WindLidarSystem
                 else
                 {
                     Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rawFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + rawFull);
                     return false;
                 }
                 // rtd check
@@ -641,6 +645,7 @@ namespace WindLidarSystem
                 else
                 {
                     Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
                     return false;
                 }
             }
