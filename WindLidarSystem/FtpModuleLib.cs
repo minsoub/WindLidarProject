@@ -85,7 +85,16 @@ namespace WindLidarSystem
                 return 0;
             }
             string ftpPath = "";
-            if (mData.mode == 1)
+            if (mData.mode == 0)        // STA
+            {
+                // sta 파일 전송
+                ftpPath = ftp_url + "/" + mData.staFileName;
+                if (sendData(ftpPath, mData.staFullFileName))
+                {
+                    mData.sendCount++;
+                }
+            }
+            else
             {
                 // Ini 파일 전송
                 ftpPath = ftp_url + "/" + mData.iniFileName;
@@ -93,24 +102,18 @@ namespace WindLidarSystem
                 {
                     mData.sendCount++;
                 }
-                // rtd 파일전송
-                ftpPath = ftp_url + "/" + mData.rtdFileName;
-                if (sendData(ftpPath, mData.rtdFullFileName))
+                if (mData.rtdFileName != "")
                 {
-                    mData.sendCount++;
+                    // rtd 파일전송
+                    ftpPath = ftp_url + "/" + mData.rtdFileName;
+                    if (sendData(ftpPath, mData.rtdFullFileName))
+                    {
+                        mData.sendCount++;
+                    }
                 }
                 // raw 파일전송
                 ftpPath = ftp_url + "/" + mData.rawFileName;
                 if (sendData(ftpPath, mData.rawFullFileName))
-                {
-                    mData.sendCount++;
-                }
-            }
-            else
-            {
-                // sta 파일 전송
-                ftpPath = ftp_url + "/" + mData.staFileName;
-                if (sendData(ftpPath, mData.staFullFileName))
                 {
                     mData.sendCount++;
                 }
