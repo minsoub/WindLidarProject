@@ -21,6 +21,7 @@ namespace WindLidarClient
         private string m_backupPath;
         private string m_data1;
         private string m_data2;
+        private LogCls fsLog;
 
         private string m_stCode;
         private string m_stHost;
@@ -33,7 +34,7 @@ namespace WindLidarClient
         private char[] arrSeparator = { '|' };
         private delegate void LogMessageCallback(String msg);
         private DateTime m_chkDate;
-        private int m_mode;   // 0 : STA, 1 : NOT STA
+        private int m_mode;   // 0 : STA, 1 : DBS, 2: NOT DBS
         LogMessageCallback log;
         public struct sTempInfo
         {
@@ -52,7 +53,7 @@ namespace WindLidarClient
             log = new LogMessageCallback(main.setMsg);
             sendInfo = new SndDataInfo();
             tmpInfo = new sTempInfo();
-
+            fsLog = new LogCls();
             clear();
         }
 
@@ -217,13 +218,15 @@ namespace WindLidarClient
                                             fileStDt = line.Substring(0, 19);
                                             hour = System.Convert.ToInt32(fileStDt.Substring(11, 2));
                                         }
-                                        fileEndDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
-                                        int sHour = System.Convert.ToInt32(fileEndDt.Substring(11, 2));
+
+                                        string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
+                                        int sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
                                         //Console.WriteLine("hour : [" + sHour + "] : " + line);
                                         if (hour != sHour) break;
                                         body.Add(line);
                                         readCount++;
                                         tmpInfo.readIndex++;
+                                        fileEndDt = fileTmpDt;
                                     }
                                     else
                                     {
@@ -235,12 +238,13 @@ namespace WindLidarClient
                                                 fileStDt = line.Substring(0, 19);
                                                 hour = System.Convert.ToInt32(fileStDt.Substring(11, 2));
                                             }
-                                            fileEndDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
-                                            int sHour = System.Convert.ToInt32(fileEndDt.Substring(11, 2));
+                                            string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
+                                            int sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
                                             if (hour != sHour) break;
                                             body.Add(line);
                                             readCount++;
                                             tmpInfo.readIndex++;
+                                            fileEndDt = fileTmpDt;
                                         }
                                     }
                                 }
@@ -273,6 +277,9 @@ namespace WindLidarClient
 
                                 String saveName = Path.Combine(dataPath, staSaveName);
                                 Console.WriteLine("staSaveName : " + saveName);
+                                // debug
+                                log("staSaveName : " + saveName);
+
                                 // sta file create
                                 using (StreamWriter sw = File.CreateText(saveName))
                                 {
@@ -353,14 +360,31 @@ namespace WindLidarClient
             sendInfo.path = dataPath;
 
             // raw, ini, rtd 파일 전송
+            SndDataInfo.sFileInfo sfDBS = getSendData(dir, "DBS");
+            if (sfDBS.rawFile != "") sendInfo.lstInfo.Add(sfDBS);
+
+            SndDataInfo.sFileInfo sfPPI = getSendData(dir, "PPI");
+            if (sfPPI.rawFile != "") sendInfo.lstInfo.Add(sfPPI);
+
+            SndDataInfo.sFileInfo sfRHI = getSendData(dir, "RHI");
+            if (sfRHI.rawFile != "") sendInfo.lstInfo.Add(sfRHI);
+
+            SndDataInfo.sFileInfo sfLOS = getSendData(dir, "LOS");
+            if (sfLOS.rawFile != "") sendInfo.lstInfo.Add(sfLOS);
+
+            return true;
+        }
+
+        /**
+         * 관측데이터를 디렉토리에서 검색해서 구조체에 담아서 리턴한다.
+         */ 
+        private SndDataInfo.sFileInfo getSendData(DirectoryInfo dir, string mode)
+        {
+            // mode : DBS, PPI, RHI, LOS
             SndDataInfo.sFileInfo sf = new SndDataInfo.sFileInfo();
-
-           // sf.startTime = tmpInfo.startTime;
-           // sf.endTime = tmpInfo.endTime;
-
-            // INI, RAW, RTD 파일만 검색
-
-            foreach (FileInfo fi in dir.GetFiles("*_DBS*").OrderBy(fi => fi.Name))      // 날짜순 정렬
+            int idx = 0;
+            string tmpDt2 = "";
+            foreach (FileInfo fi in dir.GetFiles("*_"+mode+"*").OrderBy(fi => fi.Name))      // 날짜순 정렬
             {
                 string file = fi.FullName;
                 string ext = Path.GetExtension(file);
@@ -371,37 +395,45 @@ namespace WindLidarClient
                     DateTime sd = convertTimeExtract(fi.Name);
                     sf.startTime = sd.ToString("yyyy-MM-dd HH:mm:ss");
                     sf.endTime = sf.startTime;
-                    m_chkDate = sd;
+                    m_chkDate = sd;                    
                 }
 
                 if (ext == ".raw" || ext == ".ini" || ext == ".rtd")
                 {
                     DateTime rtdDt = convertTimeExtract(fi.Name);
-                    
-                        sendInfo.fileCount++;
+                    idx++;
+                    string tmpDt = rtdDt.ToString("yyyy-MM-dd HH:mm");
+                    if (idx == 1)
+                    {
+                        tmpDt2 = tmpDt;
+                    }
+                    else
+                    {
+                        if (tmpDt2 != tmpDt) break;
+                    }
 
-                        if (ext == ".raw")
-                        {
-                            sf.rawFullName = fi.FullName;
-                            sf.rawFile = fi.Name;
-                        }
-                        else if(ext == ".ini")
-                        {
-                            sf.iniFullName = fi.FullName;
-                            sf.iniFile = fi.Name;
-                        }
-                        else if(ext == ".rtd")
-                        {
-                            sf.rtdFullName = fi.FullName;
-                            sf.rtdFile = fi.Name;
-                        }
+                    sendInfo.fileCount++;
 
-                        if (sendInfo.fileCount == 3) break;
+                    if (ext == ".raw")
+                    {
+                        sf.rawFullName = fi.FullName;
+                        sf.rawFile = fi.Name;
+                    }
+                    else if (ext == ".ini")
+                    {
+                        sf.iniFullName = fi.FullName;
+                        sf.iniFile = fi.Name;
+                    }
+                    else if (ext == ".rtd")
+                    {
+                        sf.rtdFullName = fi.FullName;
+                        sf.rtdFile = fi.Name;
+                    }
                 }
             }
-            sendInfo.lstInfo.Add(sf);
 
-            return true;
+            return sf;
+
         }
 
         /**
@@ -572,14 +604,6 @@ namespace WindLidarClient
                 sendInfo.m_mon = mm1;
                 sendInfo.m_day = d1;
 
-                //string msg = "";
-                if (m_mode == 0) {  // STA
-
-                }
-                else    // NOT STA
-                {
-
-                }
                 string msg = "FT:" + m_stCode + ":" + m_stHost + ":" + stDt + ":" + etDt + ":" + sendInfo.fileCount + ":" 
                     + info.iniFile + ":" + info.rawFile + ":" + info.rtdFile + ":" +type+ ":"+p1+":"+p2+":"+p3+":"+p4+":"+p5+":S";
                 byte[] buf = Encoding.ASCII.GetBytes(msg);
@@ -680,7 +704,7 @@ namespace WindLidarClient
                 }
                 else    // NOT STA
                 {
-                    msg = "FT:" + m_stCode + ":" + m_stHost + ":" + stDt + ":" + etDt + ":" + sendInfo.fileCount + ":" + info.fileName + ":E";
+                    msg = "FT:" + m_stCode + ":" + m_stHost + ":" + stDt + ":" + etDt + ":" + sendInfo.fileCount + ":" + info.rawFile + ":E";
                     rcvPort = m_ft_rcv_port;
                 }
                
@@ -694,6 +718,7 @@ namespace WindLidarClient
                     //log.Log("File status data send (startStatusSendData :" + m_stHost + "[" + stPort + "]) " + msg);
                     Console.WriteLine("File data send msg : " + msg);
                     main.setMsg("File data send end (startStatusSendData :" + m_stHost + "[" + stPort + "])" + msg);
+                    fsLog.Log("File data send end (startStatusSendData :" + m_stHost + "[" + stPort + "])" + msg);
 
                     c.Client.ReceiveTimeout = 2000;     // 2 second
                     IPEndPoint ipepLocal = new IPEndPoint(IPAddress.Any, rcvPort+5);     // 10001 + 2
@@ -712,6 +737,7 @@ namespace WindLidarClient
                         //log.Log("Alarm receive msg(almDataSend) : " + data);
                         Console.WriteLine("File data get msg : " + data);
                         main.setMsg("File data receive msg(endStatusSendData) : " + data);
+                        fsLog.Log("File data receive msg(endStatusSendData) : " + data);
 
                         if (msgArr[3] == "ok")
                         {
@@ -730,6 +756,7 @@ namespace WindLidarClient
                 Console.WriteLine(ex.ToString());
                 // log.Log("Alarm data send error(endStatusSendData) : " + ex.ToString());
                 main.setMsg("File data send error(endStatusSendData) : " + ex.ToString());
+                fsLog.Log("File data send error(endStatusSendData) : " + ex.ToString());
             }
 
 
@@ -812,6 +839,8 @@ namespace WindLidarClient
             {
                 log("[FileMoveProcess] : " + ex.ToString() + "=>" + fileName);
                 Console.WriteLine("[FileMoveProcess] : " + ex.ToString() + "=>" + fileName);
+                fsLog.Log("[FileMoveProcess] : " + ex.ToString() + "=>" + fileName);
+
                 result = false;
             }
             return result;
@@ -852,6 +881,8 @@ namespace WindLidarClient
                 log("[FileStaMoveProcess] : " + ex.ToString());
                 Console.WriteLine("[FileStaMoveProcess] : " + ex.ToString());
                 Console.WriteLine("FileStaMoveProcess : " + info.fullFileName + " => " + destFileName);
+                fsLog.Log("FileStaMoveProcess : " + info.fullFileName + " => " + destFileName);
+
                 result = false;
             }
 

@@ -21,7 +21,7 @@ namespace WindLidarClient
         private Thread staThread;   // STA 파일 처리 Thread
         private Thread almThread;
         private Thread fileThread;
-
+        private LogCls fsLog;
 
         private ManualResetEvent waitHandle;
         private ManualResetEvent staHandle;
@@ -60,7 +60,10 @@ namespace WindLidarClient
         protected string m_sourcePath;
         protected string m_backupPath;
         protected int m_cstLocalPort;
-        protected int m_sleep_time;
+        protected int m_sts_sleep_time;
+        protected int m_file_sleep_time;
+        protected int m_sta_sleep_time;
+        protected int m_alm_sleep_time;
         protected int m_st_rcv_port;        
         protected int m_ft_rcv_port;
         protected int m_at_rcv_port;
@@ -77,7 +80,10 @@ namespace WindLidarClient
             myIniFile = new IniFile(@"D:\WindLidarClient.ini");
             m_sourcePath = myIniFile.Read("SOURCE_PATH");
             m_backupPath = myIniFile.Read("BACKUP_PATH");
-            m_sleep_time = System.Convert.ToInt32(myIniFile.Read("SLEEP_TIME"));
+            m_sts_sleep_time = System.Convert.ToInt32(myIniFile.Read("STS_SLEEP_TIME"));
+            m_file_sleep_time = System.Convert.ToInt32(myIniFile.Read("FILE_SLEEP_TIME"));
+            m_sta_sleep_time = System.Convert.ToInt32(myIniFile.Read("STA_SLEEP_TIME"));
+            m_alm_sleep_time = System.Convert.ToInt32(myIniFile.Read("ALM_SLEEP_TIME"));
             m_data1 = myIniFile.Read("DATA1");
             m_data2 = myIniFile.Read("DATA2");
 
@@ -92,7 +98,8 @@ namespace WindLidarClient
             endProgress = new EndPointCallback(main.EndPointProgress);
             ingProgress = new ProgressIngCallback(main.IngProgress);
 
-            alarmProcess = new AlarmProcess(this);            
+            alarmProcess = new AlarmProcess(this);
+            fsLog = new LogCls();
 
         }
 
@@ -203,7 +210,7 @@ namespace WindLidarClient
                         log("[ StatusSender error ] : " + ex.ToString());
                     }
 
-                    waitHandle.WaitOne(1000 * m_sleep_time);  // 1 minute
+                    waitHandle.WaitOne(1000 * m_sts_sleep_time);  // 60 second
                 }
             }
         }
@@ -241,7 +248,7 @@ namespace WindLidarClient
                     {
                         log("[ AlarmCheckProcess error ] : " + ex.ToString());
                     }
-                    almHandle.WaitOne(1000 * 5);   // 5 second
+                    almHandle.WaitOne(1000 * m_alm_sleep_time);   // 60 second
                 }
             }
         }
@@ -317,11 +324,13 @@ namespace WindLidarClient
                                         else
                                         {
                                             log("[ StaCheckProcess ] File Move fail....");
+                                            fsLog.Log("[ StaCheckProcess ] File Move fail....");
                                         }
                                     }
                                     else
                                     {
                                         log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
+                                        fsLog.Log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
                                     }
                                 }
                             }
@@ -338,7 +347,7 @@ namespace WindLidarClient
                     }
                     if (old_data == false)
                     {
-                        staHandle.WaitOne(1000 * 60 * 60);  // 1 hour  
+                        staHandle.WaitOne(1000 * m_sta_sleep_time);  // 1 hour  
                     }
                     else
                     {
@@ -412,7 +421,7 @@ namespace WindLidarClient
                                             //dataProcess.tmpSave(m_sourcePath);
                                             double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
                                             //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
-                                            if (span > (60 * 19))        // 읽은 데이터가 현재보다 19분 이전 데이터이면 오래된 데이터이므로
+                                            if (span > (60 * 12))        // 읽은 데이터가 현재보다 12분 이전 데이터이면 오래된 데이터이므로
                                             {
                                                 old_data = true;
                                             }
@@ -420,11 +429,13 @@ namespace WindLidarClient
                                         else
                                         {
                                             log("[ fileCheckProcess ] File Move fail....");
+                                            fsLog.Log("[ fileCheckProcess ] File Move fail....");
                                         }
                                     }
                                     else
                                     {
                                         log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
+                                        fsLog.Log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
                                     }
                                 }
                             }
@@ -441,7 +452,7 @@ namespace WindLidarClient
                     }
                     if (old_data == false)
                     {
-                        waitHandle.WaitOne(1000 * m_sleep_time * 10);  // 10 minute
+                        waitHandle.WaitOne(1000 * m_file_sleep_time);  // 10 minute
                     }
                     else
                     {
