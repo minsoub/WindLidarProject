@@ -69,10 +69,18 @@ namespace WindLidarSystem
                             arrTime2[0], arrTime2[1], arrTime2[2], arrTime2[3], arrTime2[4], arrTime2[5]
                         );
 
-
-                        sql = String.Format("UPDATE T_RCV_FILE set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
-                        arrMsg[5], arrMsg[1], st_time, et_time
-                        );
+                        if (arrMsg[6].IndexOf("DBS") == -1)
+                        {
+                            sql = String.Format("UPDATE T_RCV_NOT_DBS_FILE set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
+                            arrMsg[5], arrMsg[1], st_time, et_time
+                            );
+                        }
+                        else
+                        {
+                            sql = String.Format("UPDATE T_RCV_FILE set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
+                            arrMsg[5], arrMsg[1], st_time, et_time
+                            );
+                        }
 
                         logMsg(sql);
                         oCmd = new MySqlCommand(sql, conn);
@@ -99,21 +107,35 @@ namespace WindLidarSystem
                                 arrTime2[0], arrTime2[1], arrTime2[2], arrTime2[3], arrTime2[4], arrTime2[5]
                             );
 
-                            // sts insert
-                            sql = String.Format("insert into T_RCV_FILE (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt) values"
-                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,   '{5}', '{6}', '{7}',  current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8]
-                            );
-                            oCmd = new MySqlCommand(sql, conn);
-                            oCmd.ExecuteNonQuery();
+                            if (arrMsg[6].IndexOf("DBS") == -1)
+                            {
+                                // sts insert
+                                sql = String.Format("insert into T_RCV_NOT_DBS_FILE (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt) values"
+                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,   '{5}', '{6}', '{7}',  current_timestamp ) ",
+                                arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8]
+                                );
+                                oCmd = new MySqlCommand(sql, conn);
+                                oCmd.ExecuteNonQuery();
+                            }
+                            else   // DBS
+                            {
+                                // sts insert
+                                sql = String.Format("insert into T_RCV_FILE (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt) values"
+                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,   '{5}', '{6}', '{7}',  current_timestamp ) ",
+                                arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8]
+                                );
+                                oCmd = new MySqlCommand(sql, conn);
+                                oCmd.ExecuteNonQuery();
 
-                            // ini insert
-                            sql = String.Format("insert into T_RCV_PARAM_INFO (s_code, st_time, et_time, p_type, p_pam1, p_pam2, p_pam3, p_pam4, avt_tm, reg_dt) values"
-                            + " ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[9], arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14]
-                            );
-                            oCmd = new MySqlCommand(sql, conn);
-                            oCmd.ExecuteNonQuery();
+                                // ini insert
+                                sql = String.Format("insert into T_RCV_PARAM_INFO (s_code, st_time, et_time, p_type, p_pam1, p_pam2, p_pam3, p_pam4, avt_tm, reg_dt) values"
+                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', current_timestamp ) ",
+                                arrMsg[1], st_time, et_time, arrMsg[9], arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14]
+                                );
+                                oCmd = new MySqlCommand(sql, conn);
+                                oCmd.ExecuteNonQuery();
+                            }
+
 
                             udpOkSend(arrMsg[1], arrMsg[2], client_ip);
                         }
@@ -208,9 +230,12 @@ namespace WindLidarSystem
                             );
 
                             // STA insert
+                            string fileName = arrMsg[6];
+                            fileName = fileName.Replace("snd", "sta");
+
                             sql = String.Format("insert into T_RCV_STA (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, f_name,  reg_dt) values"
                             + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,  '{5}',  current_timestamp ) ",
-                            arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6]
+                            arrMsg[1], st_time, et_time, arrMsg[5], 0, fileName
                             );
                             oCmd = new MySqlCommand(sql, conn);
                             oCmd.ExecuteNonQuery();
@@ -239,6 +264,57 @@ namespace WindLidarSystem
 
             return result;
         }
+
+        /**
+         * 데이터베이스를 조회해서 Other 데이터 구조체에 데이터를 담아서 리턴한다. 
+         * NOT DBS
+         */
+        public StsInfo getRcvOtherDataInfo()
+        {
+            MySqlCommand oCmd = null;
+            StsInfo stsInfo = null;
+            string sql = "";
+            try
+            {
+                using (MySqlConnection conn = ConnectionPool.Instance.getConnection())
+                {
+                    // 작업처리하지 않은건(s_chk='N')과 받은 파일 개수가 0개 이상인 건을 조회해서 작업을 수행한다.
+                    sql = "select no, s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt from T_RCV_NOT_DBS_FILE ";
+                    sql += " where s_chk='N' and acc_file_cnt > 0 and err_chk = 'N' order by reg_dt asc limit 0, 1";
+
+                    oCmd = new MySqlCommand(sql, conn);
+                    MySqlDataReader rs = oCmd.ExecuteReader();
+                    while (rs.Read())
+                    {
+                        stsInfo = new StsInfo();
+                        stsInfo.no = rs.GetInt32("no");
+                        stsInfo.s_code = rs.GetString("s_code");
+                        stsInfo.st_time = rs.GetString("st_time");
+                        stsInfo.et_time = rs.GetString("et_time");
+                        stsInfo.read_file_cnt = rs.GetInt32("real_file_cnt");
+                        stsInfo.acc_file_cnt = rs.GetInt32("acc_file_cnt");
+                        stsInfo.err_chk = rs.GetString("err_chk");
+                        stsInfo.s_chk = rs.GetString("s_chk");
+                        stsInfo.srv_file_cnt = rs.GetInt32("srv_file_cnt");
+                        stsInfo.ini_name = rs.GetString("ini_name");
+                        stsInfo.raw_name = rs.GetString("raw_name");
+                        stsInfo.rtd_name = rs.GetString("rtd_name");
+                        stsInfo.mode = 2;
+                    }
+                    rs.Close();
+                    rs = null;
+                    oCmd = null;
+                }
+            }
+            catch (MySqlException e)
+            {
+                log.Log("[FileProcess::getRcvOtherDataInfo] error : " + e.Message);
+                logMsg("[FileProcess::getRcvOtherDataInfo] error : " + e.Message);
+            }
+
+            return stsInfo;
+        }
+
 
         /**
          * 데이터베이스를 조회해서 StsInfo 구조체에 데이터를 담아서 리턴한다.
@@ -391,16 +467,16 @@ namespace WindLidarSystem
 
                 if (databaseSendUpdate(info) == true)
                 {
-                    logMsg("[ftpSendData] The data is successfully updated.[" + info.s_code + "]");
+                    logMsg("[ftpSendData] The data is successfully updated.[" + info.f_name + "]");
 
                     if (FileMoveProcess(info) == true)
                     {
-                        logMsg("[ftpSendData] The data is successfully moved in the backup directory.[" + info.s_code + "]");
+                        logMsg("[ftpSendData] The data is successfully moved in the backup directory.[" + info.f_name + "]");
                         result = true;
                     }
                     else
                     {
-                        logMsg("[ftpSendData] The job moving to the backup directory is not successed.[" + info.s_code + "]");
+                        logMsg("[ftpSendData] The job moving to the backup directory is not successed.[" + info.f_name + "]");
                         result = false;
                     }
                 }
@@ -413,7 +489,7 @@ namespace WindLidarSystem
             }
             else
             {
-                logMsg("[ftpSendData] File is not exists...[" + info.s_code + "]");
+                logMsg("[ftpSendData] File is not exists...[" + info.f_name + "]");
                 result = false;
             }
 
@@ -429,6 +505,7 @@ namespace WindLidarSystem
 
             sendInfo = new SndDataInfo();
             sendInfo.mode = info.mode;
+            Console.WriteLine("ftpSendData mode : " + sendInfo.mode);
 
             // FTP 전송할 파일을 읽어 들인다.
             bool ok = HasWritePermissionOnDir(info);
@@ -488,9 +565,12 @@ namespace WindLidarSystem
                     if (info.mode == 0)
                     {
                         sql = String.Format("update T_RCV_STA set s_chk='Y', srv_file_cnt={0}, upt_dt=current_timestamp where no={1}", info.srv_file_cnt, info.no);
-                    }else
+                    }else if(info.mode == 1)
                     {
                         sql = String.Format("update T_RCV_FILE set s_chk='Y', srv_file_cnt={0}, upt_dt=current_timestamp where no={1}", info.srv_file_cnt, info.no);
+                    }else if(info.mode == 2)
+                    {
+                        sql = String.Format("update T_RCV_NOT_DBS_FILE set s_chk='Y', srv_file_cnt={0}, upt_dt=current_timestamp where no={1}", info.srv_file_cnt, info.no);
                     }
                     oCmd = new MySqlCommand(sql, conn);
                     oCmd.ExecuteNonQuery();
@@ -521,11 +601,15 @@ namespace WindLidarSystem
                 {
                     if (info.mode == 0)
                     {
-                        sql = String.Format("update T_RCV_FILE set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                        sql = String.Format("update T_RCV_STA set err_chk='Y', upt_dt=current_timestamp where no={0}", info.no);
                     }
-                    else
+                    else if(info.mode == 1)  // DBS
                     {
-                        sql = String.Format("update T_RCV_STA set err_chk='Y', upt_dt=current_timestamp where no={1}", info.no);
+                        sql = String.Format("update T_RCV_FILE set err_chk='Y', upt_dt=current_timestamp where no={0}", info.no);
+                    }
+                    else if(info.mode == 2) // NOT DBS
+                    {
+                        sql = String.Format("update T_RCV_NOT_DBS_FILE set err_chk='Y', upt_dt=current_timestamp where no={0}", info.no);
                     }
                     oCmd = new MySqlCommand(sql, conn);
                     oCmd.ExecuteNonQuery();
@@ -562,9 +646,9 @@ namespace WindLidarSystem
             //public string raw_name;
             //public string rtd_name;
 
-            string year = info.st_time.Substring(0, 4);
-            string mon = info.st_time.Substring(5, 2);
-            string day = info.st_time.Substring(8, 2); 
+            string year = info.et_time.Substring(0, 4);
+            string mon = info.et_time.Substring(5, 2);
+            string day = info.et_time.Substring(8, 2); 
 
             string dataPath = Path.Combine(m_sourceDir, info.s_code, year, mon, day);
             sendInfo.path = dataPath;
@@ -577,21 +661,30 @@ namespace WindLidarSystem
             {
                 Console.WriteLine("Directory not exist.... : {0}", dataPath);
                 logMsg("[FileProcess::HasWritePermissionOnDir] Directory not exist.... : " + dataPath);
+                log.Log("[FileProcess::HasWritePermissionOnDir] Directory not exist.... : " + dataPath);
                 return false;
             }
 
+            Console.WriteLine("HasWritePermissionOnDir mode => " + info.mode);
             // sta check
             if (info.mode == 0)     // STA
             {
                 string stsFull = Path.Combine(dataPath, info.f_name);
+
                 if (File.Exists(stsFull))
                 {
                     sendInfo.staFileName = info.f_name;
                     sendInfo.staFullFileName = stsFull;
                     sendInfo.fileCount++;
                 }
+                else
+                {
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + stsFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + stsFull);
+                    return false;
+                }
             }
-            else
+            else 
             {
                 // ini check
                 string iniFull = Path.Combine(dataPath, info.ini_name);
@@ -601,6 +694,12 @@ namespace WindLidarSystem
                     sendInfo.iniFullFileName = iniFull;
                     sendInfo.fileCount++;
                 }
+                else
+                {
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + iniFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + iniFull);
+                    return false;
+                }
                 // raw check
                 string rawFull = Path.Combine(dataPath, info.raw_name);
                 if (File.Exists(rawFull))
@@ -609,13 +708,29 @@ namespace WindLidarSystem
                     sendInfo.rawFullFileName = rawFull;
                     sendInfo.fileCount++;
                 }
-                // rtd check
-                string rtdFull = Path.Combine(dataPath, info.rtd_name);
-                if (File.Exists(rtdFull))
+                else
                 {
-                    sendInfo.rtdFileName = info.rtd_name;
-                    sendInfo.rtdFullFileName = rtdFull;
-                    sendInfo.fileCount++;
+                    Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rawFull);
+                    log.Log("HasWritePermissionOnDir file not exist [error] : " + rawFull);
+                    return false;
+                }
+
+                if (info.rtd_name != "")
+                {
+                    // rtd check
+                    string rtdFull = Path.Combine(dataPath, info.rtd_name);
+                    if (File.Exists(rtdFull))
+                    {
+                        sendInfo.rtdFileName = info.rtd_name;
+                        sendInfo.rtdFullFileName = rtdFull;
+                        sendInfo.fileCount++;
+                    }
+                    else
+                    {
+                        Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
+                        log.Log("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
+                        return false;
+                    }
                 }
             }
             return true;

@@ -27,7 +27,8 @@ namespace WindLidarSystem
         public string m_dbHost;
         public string m_dbPort;
         public string m_stsThreadTime;
-        public string m_ftpThreadTime;      
+        public string m_ftpThreadTime;
+        public string m_staThreadTime;
         public string m_sourceDir;
         public string m_backupDir;
 
@@ -55,6 +56,7 @@ namespace WindLidarSystem
             m_dbPort = iniFS.Read("DB_PORT");
             m_ftpThreadTime = iniFS.Read("FTP_THREAD_TIME");
             m_stsThreadTime = iniFS.Read("STS_THREAD_TIME");
+            m_staThreadTime = iniFS.Read("STA_THREAD_TIME");
             m_sourceDir = iniFS.Read("SOURCE_PATH");
             m_backupDir = iniFS.Read("BACKUP_PATH");
         }

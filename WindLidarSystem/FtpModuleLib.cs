@@ -85,7 +85,16 @@ namespace WindLidarSystem
                 return 0;
             }
             string ftpPath = "";
-            if (mData.mode == 1)
+            if (mData.mode == 0)        // STA
+            {
+                // sta 파일 전송
+                ftpPath = ftp_url + "/" + mData.staFileName;
+                if (sendData(ftpPath, mData.staFullFileName))
+                {
+                    mData.sendCount++;
+                }
+            }
+            else
             {
                 // Ini 파일 전송
                 ftpPath = ftp_url + "/" + mData.iniFileName;
@@ -93,24 +102,18 @@ namespace WindLidarSystem
                 {
                     mData.sendCount++;
                 }
-                // rtd 파일전송
-                ftpPath = ftp_url + "/" + mData.rtdFileName;
-                if (sendData(ftpPath, mData.rtdFullFileName))
+                if (mData.rtdFileName != "")
                 {
-                    mData.sendCount++;
+                    // rtd 파일전송
+                    ftpPath = ftp_url + "/" + mData.rtdFileName;
+                    if (sendData(ftpPath, mData.rtdFullFileName))
+                    {
+                        mData.sendCount++;
+                    }
                 }
                 // raw 파일전송
                 ftpPath = ftp_url + "/" + mData.rawFileName;
                 if (sendData(ftpPath, mData.rawFullFileName))
-                {
-                    mData.sendCount++;
-                }
-            }
-            else
-            {
-                // sta 파일 전송
-                ftpPath = ftp_url + "/" + mData.staFileName;
-                if (sendData(ftpPath, mData.staFullFileName))
                 {
                     mData.sendCount++;
                 }
@@ -137,13 +140,14 @@ namespace WindLidarSystem
 
             // 입력파일을 바이트 배열로 읽음
             byte[] data;
-            using (StreamReader reader = new StreamReader(inputFile))
-            {
-                data = Encoding.UTF8.GetBytes(reader.ReadToEnd());
-            }
-
+            
             try
             {
+                using (StreamReader reader = new StreamReader(inputFile))
+                {
+                    data = Encoding.UTF8.GetBytes(reader.ReadToEnd());
+                }
+
                 // RequestStream에 데이타를 쓴다
                 req.ContentLength = data.Length;
                 using (Stream reqStream = req.GetRequestStream())
@@ -163,7 +167,7 @@ namespace WindLidarSystem
             }
             catch (WebException ex)
             {
-                Console.WriteLine("[ FtpSend ] WebException Error : " + ex.ToString());
+                Console.WriteLine("[ FtpSend ] WebException Error : " + ex.ToString() + "=>" + inputFile);
                 log.Log("[ FtpSend ] WebException error : " + ex.ToString());
                 result = false;
 

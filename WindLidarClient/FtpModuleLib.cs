@@ -53,7 +53,7 @@ namespace WindLidarClient
             string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
             if (FtpDirectoryExists(ftp_url) == false)
             {
-                log.Log("FTP Server : Directory create error......");
+                log.Log("FTP Server[sendDataToFtpServer] : Directory create error......[" + ftp_url + "]");
                 return 0;
             }
 
@@ -80,7 +80,7 @@ namespace WindLidarClient
                 mData.sendCount++;
             }
 
-            log.Log("[ FtpSend ] FTP URI : " + ftpPath);
+            log.Log("[ FtpSend ] FTP URI[sendDataToFtpServer] : " + ftpPath);
 
             return mData.sendCount;
         }
@@ -97,7 +97,7 @@ namespace WindLidarClient
             string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
             if (FtpDirectoryExists(ftp_url) == false)
             {
-                log.Log("FTP Server : Directory create error......");
+                log.Log("FTP Server[sendStaDataToFtpServer] : Directory create error......[" + ftp_url + "]");
                 return 0;
             }
             // sta 파일 전송
@@ -109,7 +109,7 @@ namespace WindLidarClient
                 mData.sendCount++;
             }
 
-            log.Log("[ FtpSend ] FTP URI : " + ftpPath);
+            log.Log("[ FtpSend ] FTP URI[sendStaDataToFtpServer] : " + ftpPath);
 
             return mData.sendCount;
         }
