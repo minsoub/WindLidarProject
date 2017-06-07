@@ -121,16 +121,22 @@ namespace WindLidarSystem
                             {
                                 // sts insert
                                 sql = String.Format("insert into T_RCV_FILE (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt) values"
-                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,   '{5}', '{6}', '{7}',  current_timestamp ) ",
-                                arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8]
+                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', 'N', 'N', 0,   '{5}', '{6}', '{7}',  current_timestamp ) "
+                                + " ON DUPLICATE KEY "
+                                + " UPDATE real_file_cnt='{8}', acc_file_cnt='{9}', err_chk='{10}', s_chk='{11}', srv_file_cnt='{12}', ini_name='{13}', raw_name='{14}', rtd_name='{15}'",
+                                arrMsg[1], st_time, et_time, arrMsg[5], 0, arrMsg[6], arrMsg[7], arrMsg[8],
+                                arrMsg[5], 0, 'N', 'N', 0,  arrMsg[6], arrMsg[7], arrMsg[8]
                                 );
                                 oCmd = new MySqlCommand(sql, conn);
                                 oCmd.ExecuteNonQuery();
 
                                 // ini insert
                                 sql = String.Format("insert into T_RCV_PARAM_INFO (s_code, st_time, et_time, p_type, p_pam1, p_pam2, p_pam3, p_pam4, avt_tm, reg_dt) values"
-                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', current_timestamp ) ",
-                                arrMsg[1], st_time, et_time, arrMsg[9], arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14]
+                                + " ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', current_timestamp ) "
+                                + " ON DUPLICATE KEY "
+                                + " UPDATE p_pam1='{9}', p_pam2='{10}', p_pam3='{11}', p_pam4='{12}', avt_tm='{13}'",
+                                arrMsg[1], st_time, et_time, arrMsg[9], arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14],
+                                arrMsg[10], arrMsg[11], arrMsg[12], arrMsg[13], arrMsg[14]
                                 );
                                 oCmd = new MySqlCommand(sql, conn);
                                 oCmd.ExecuteNonQuery();

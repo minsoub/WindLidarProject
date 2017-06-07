@@ -87,13 +87,13 @@ namespace WindLidarSystem
             //ResourceManager rm = Properties.Resources.ResourceManager;
            // Bitmap myImage = (Bitmap)rm.GetObject("off");
 
-            panel13211.BackgroundImage = Properties.Resources.off;
+            panel13211.BackgroundImage = Properties.Resources.btn_off;  //.off;
             panel13211.BackgroundImageLayout = ImageLayout.Stretch;
 
-            panel13206.BackgroundImage = Properties.Resources.off;
+            panel13206.BackgroundImage = Properties.Resources.btn_off;
             panel13206.BackgroundImageLayout = ImageLayout.Stretch;
 
-            panel13210.BackgroundImage = Properties.Resources.off;
+            panel13210.BackgroundImage = Properties.Resources.btn_off;
             panel13210.BackgroundImageLayout = ImageLayout.Stretch;
 
             panel1.BackgroundImage = Properties.Resources.ridar;
@@ -106,21 +106,29 @@ namespace WindLidarSystem
             //panelHide.BackgroundImageLayout = ImageLayout.Stretch;
 
 
-            lblSmall.BackColor = Color.DodgerBlue;
+            lblSmall.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //Color.DodgerBlue;
             lblSmall.ForeColor = Color.White;
             lblSmall.Cursor = Cursors.Hand;
-            lblClose.BackColor = Color.DodgerBlue;
+            lblClose.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //Color.DodgerBlue;
             lblClose.ForeColor = Color.White;
             lblClose.Cursor = Cursors.Hand;
 
-            lblTitle.BackColor = Color.DodgerBlue;
+            lblTitle.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //Color.DodgerBlue;
             lblTitle.ForeColor = Color.White;
 
-            lblTitle2.BackColor = Color.DodgerBlue;
+            lblTitle2.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //Color.DodgerBlue;
             lblTitle2.ForeColor = Color.White;
 
             btnStart.Cursor = Cursors.Hand;
             btnStop.Cursor = Cursors.Hand;
+
+            btnStart.Text = "";
+            btnStop.Text = "";
+            btnStart.BackgroundImage = Properties.Resources.btn_start_sm;
+            btnStart.BackgroundImageLayout = ImageLayout.Stretch;
+            btnStop.BackgroundImage = Properties.Resources.btn_stop_g;
+            btnStop.BackgroundImageLayout = ImageLayout.Stretch;
+
         }
 
 
@@ -135,6 +143,9 @@ namespace WindLidarSystem
                 btnStart.Enabled = false;
                 btnStop.Enabled = true;
                 statusPanel.Text = "Application started. Action Start.";
+
+                btnStart.BackgroundImage = Properties.Resources.btn_start_g;
+                btnStop.BackgroundImage = Properties.Resources.btn_stop_sm;
             }
         }
         private void btnStop_Click(object sender, EventArgs e)
@@ -147,6 +158,9 @@ namespace WindLidarSystem
             btnStart.Enabled = true;
             btnStop.Enabled = false;
             statusPanel.Text = "Application started. Action Stop.";
+
+            btnStart.BackgroundImage = Properties.Resources.btn_start_sm;
+            btnStop.BackgroundImage = Properties.Resources.btn_stop_g;
         }
 
         private void createStatusBar()
@@ -430,22 +444,22 @@ namespace WindLidarSystem
             {
                 if (panel13211.InvokeRequired)
                 {
-                    panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.off));
+                    panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.btn_off));
                 }
                 else
                 {
-                    panel13211.BackgroundImage = Properties.Resources.off;
+                    panel13211.BackgroundImage = Properties.Resources.btn_off;
                 }
             }
             else if (msg == "1")
             {
                 if (panel13211.InvokeRequired)
                 {
-                    panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.on));
+                    panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.btn_on));
                 }
                 else
                 {
-                    panel13211.BackgroundImage = Properties.Resources.on;
+                    panel13211.BackgroundImage = Properties.Resources.btn_on;
                 }
             }
         }                        
@@ -458,22 +472,22 @@ namespace WindLidarSystem
             {
                 if (panel13210.InvokeRequired)
                 {
-                    panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.off));
+                    panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.btn_off));
                 }
                 else
                 {
-                    panel13210.BackgroundImage = Properties.Resources.off;
+                    panel13210.BackgroundImage = Properties.Resources.btn_off;
                 }
             }
             else if (msg == "1")
             {
                 if (panel13210.InvokeRequired)
                 {
-                    panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.on));
+                    panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.btn_on));
                 }
                 else
                 {
-                    panel13210.BackgroundImage = Properties.Resources.on;
+                    panel13210.BackgroundImage = Properties.Resources.btn_on;
                 }
             }
         }
@@ -486,22 +500,22 @@ namespace WindLidarSystem
             {
                 if (panel13206.InvokeRequired)
                 {
-                    panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.off));
+                    panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.btn_off));
                 }
                 else
                 {
-                    panel13206.BackgroundImage = Properties.Resources.off;
+                    panel13206.BackgroundImage = Properties.Resources.btn_off;
                 }
             }
             else if (msg == "1")
             {
                 if (panel13206.InvokeRequired)
                 {
-                    panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.on));
+                    panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.btn_on));
                 }
                 else
                 {
-                    panel13206.BackgroundImage = Properties.Resources.on;
+                    panel13206.BackgroundImage = Properties.Resources.btn_on;
                 }
             }
                
@@ -609,9 +623,16 @@ namespace WindLidarSystem
             rc = new Rectangle(0, 0, this.ClientSize.Width, cCaption);
             Rectangle rc2 = new Rectangle(0, 0, this.ClientSize.Width, ClientSize.Height);
             //e.Graphics.FillRectangle(Brushes.White, rc2);
-            e.Graphics.FillRectangle(Brushes.DodgerBlue, rc);   // DarkBlue, rc);
+            //e.Graphics.FillRectangle(Brushes.DodgerBlue, rc);   // DarkBlue, rc);
 
 
+            Color color = System.Drawing.ColorTranslator.FromHtml("#32709f");
+            Brush b = new SolidBrush(color);
+            e.Graphics.FillRectangle(b, rc);   // DarkBlue, rc);
+            //e.Graphics.FillRectangle(Brushes.DodgerBlue, rc);   // DarkBlue, rc);
+
+
+            
             //e.Graphics.DrawRectangle(Pens.Black, rc2);
 
             ControlPaint.DrawBorder(e.Graphics, this.ClientRectangle, Color.DarkGray, ButtonBorderStyle.Solid);
