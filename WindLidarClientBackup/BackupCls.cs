@@ -13,7 +13,6 @@ namespace WindLidarClientBackup
         private IniFile myIniFile;
         public BackupCls()
         {
-             myIniFile = new IniFile(@"D:\WindLidarClient.ini");
              log = new LogCls();
         }
 
@@ -22,7 +21,7 @@ namespace WindLidarClientBackup
          */
         public void process()
         {
-            log.Log("Backup start.............");
+            log.Log("Backup deletion start.............");
 
             if (backupCheck() == false)
             {
@@ -32,6 +31,7 @@ namespace WindLidarClientBackup
             {
                 log.Log("Backup data is deleted....");
             }
+            log.Log("Backup deletion end");
         }
 
         /**
@@ -46,9 +46,15 @@ namespace WindLidarClientBackup
             string chYear = chkDt.ToString("yyyy");
             string chMon = chkDt.ToString("MM");
 
-            // path
-            string dataPath = Path.Combine(myIniFile.Read("BACKUP_PATH"), chYear, chMon);
+            myIniFile = new IniFile(@"D:\\WindLidarClient.ini");
 
+            string backupDir = myIniFile.Read("BACKUP_PATH", "WindLidarClient");
+            Console.WriteLine("init dir : " + backupDir);
+            // path
+            string dataPath = Path.Combine(backupDir, chYear, chMon);
+            Console.WriteLine("directory : " + dataPath);
+
+            log.Log("Target Directory : " + dataPath);
             if (Directory.Exists(dataPath) == false)
             {
                 result = false;
@@ -59,6 +65,7 @@ namespace WindLidarClientBackup
                 Directory.Delete(dataPath, true);
 
                 result = true;
+                log.Log("The delete is complated.");
             }
 
             return result;
