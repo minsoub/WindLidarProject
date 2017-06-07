@@ -80,7 +80,7 @@ namespace WindLidarClient
                 mData.sendCount++;
             }
 
-            log.Log("[ FtpSend ] FTP URI[sendDataToFtpServer] : " + ftpPath);
+            //log.Log("[ FtpSend ] FTP URI[sendDataToFtpServer] : " + ftpPath);
 
             return mData.sendCount;
         }
@@ -109,7 +109,7 @@ namespace WindLidarClient
                 mData.sendCount++;
             }
 
-            log.Log("[ FtpSend ] FTP URI[sendStaDataToFtpServer] : " + ftpPath);
+            //log.Log("[ FtpSend ] FTP URI[sendStaDataToFtpServer] : " + ftpPath);
 
             return mData.sendCount;
         }
@@ -150,7 +150,7 @@ namespace WindLidarClient
                     // FTP 결과 상태 출력
                     Console.WriteLine("[ FtpSend ] Upload completed : {0}, {1}", resp.StatusCode, resp.StatusDescription);
                     string logMsg = String.Format("[ FtpSend ] Upload completed : {0}, {1}", resp.StatusCode, resp.StatusDescription);
-                    log.Log(logMsg);
+                    //log.Log(logMsg);
                     result = true;
                 }
             }

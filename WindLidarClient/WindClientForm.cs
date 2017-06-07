@@ -71,17 +71,19 @@ namespace WindLidarClient
             //panelHide.BackgroundImageLayout = ImageLayout.Stretch;
 
 
-            lblSmall.BackColor = Color.DodgerBlue;
+            lblSmall.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  // Color.DodgerBlue;
             lblSmall.ForeColor = Color.White;
             lblSmall.Cursor = Cursors.Hand;
-            lblClose.BackColor = Color.DodgerBlue;
+            lblClose.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //  Color.DodgerBlue;
             lblClose.ForeColor = Color.White;
             lblClose.Cursor = Cursors.Hand;
 
-            lblTitle.BackColor = Color.DodgerBlue;
+
+
+            lblTitle.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //  Color.DodgerBlue;
             lblTitle.ForeColor = Color.White;
 
-            lblTitle2.BackColor = Color.DodgerBlue;
+            lblTitle2.BackColor = System.Drawing.ColorTranslator.FromHtml("#32709f");  //  Color.DodgerBlue;
             lblTitle2.ForeColor = Color.White;
 
             btnStart.Cursor = Cursors.Hand;
@@ -91,6 +93,21 @@ namespace WindLidarClient
             //this.BackColor = Color.White;
 
             this.BackColor = Color.FromArgb(255, 255, 250);
+
+            // image load
+            btnStart.Text = "";
+            btnStop.Text = "";
+            btnStart.BackgroundImage = Properties.Resources.btn_start_sm;
+            btnStart.BackgroundImageLayout = ImageLayout.Stretch;
+            btnStop.BackgroundImage = Properties.Resources.btn_stop_sm_g;
+            btnStop.BackgroundImageLayout = ImageLayout.Stretch;
+
+            //lblSmall.Text = "";
+            //lblClose.Text = "";
+            //lblSmall.BackgroundImage = Properties.Resources.btn__;
+            //lblSmall.BackgroundImageLayout = ImageLayout.Stretch;
+            //lblClose.BackgroundImage = Properties.Resources.btn_x;
+            //lblClose.BackgroundImageLayout = ImageLayout.Stretch;  
         }
 
         private void btnStart_Click(object sender, EventArgs e)
@@ -146,7 +163,12 @@ namespace WindLidarClient
                 process.start();
 
                 statusPanel.Text = "Process started. Action Start....";
-                statusPanel.ToolTipText = "Last Activity";                
+                statusPanel.ToolTipText = "Last Activity";
+
+                btnStart.BackgroundImage = Properties.Resources.btn_start_sm_g;
+                btnStart.BackgroundImageLayout = ImageLayout.Stretch;
+                btnStop.BackgroundImage = Properties.Resources.btn_stop_sm;
+                btnStop.BackgroundImageLayout = ImageLayout.Stretch;
             }
         }
 
@@ -291,6 +313,11 @@ namespace WindLidarClient
             txtPass.ReadOnly = false;
             btnStart.Enabled = true;
             btnStop.Enabled = false;
+
+            btnStart.BackgroundImage = Properties.Resources.btn_start_sm;
+            btnStart.BackgroundImageLayout = ImageLayout.Stretch;
+            btnStop.BackgroundImage = Properties.Resources.btn_stop_sm_g;
+            btnStop.BackgroundImageLayout = ImageLayout.Stretch;
         }
         //      private void panelClose_Click(object sender, EventArgs e)
         //      {
@@ -329,7 +356,10 @@ namespace WindLidarClient
             rc = new Rectangle(0, 0, this.ClientSize.Width, cCaption);
             Rectangle rc2 = new Rectangle(0, 0, this.ClientSize.Width, ClientSize.Height);
             //e.Graphics.FillRectangle(Brushes.White, rc2);
-            e.Graphics.FillRectangle(Brushes.DodgerBlue, rc);   // DarkBlue, rc);
+            Color color = System.Drawing.ColorTranslator.FromHtml("#32709f");
+            Brush b = new SolidBrush(color);
+            e.Graphics.FillRectangle(b, rc);   // DarkBlue, rc);
+            //e.Graphics.FillRectangle(Brushes.DodgerBlue, rc);   // DarkBlue, rc);
 
             
             //e.Graphics.DrawRectangle(Pens.Black, rc2);
