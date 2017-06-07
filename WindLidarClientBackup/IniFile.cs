@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System;
 
 namespace WindLidarClientBackup
 {
@@ -10,6 +11,7 @@ namespace WindLidarClientBackup
         string Path;
         string EXE = Assembly.GetExecutingAssembly().GetName().Name;
 
+        
         [DllImport("kernel32", CharSet = CharSet.Unicode)]
         static extern long WritePrivateProfileString(string Section, string Key, string Value, string FilePath);
 
@@ -19,12 +21,23 @@ namespace WindLidarClientBackup
         public IniFile(string IniPath = null)
         {
             Path = new FileInfo(IniPath ?? EXE + ".ini").FullName.ToString();
+
+            
+            Console.WriteLine("path : " + Path);
+            FileInfo f = new FileInfo(Path);
+
+            if (f.Exists == true)
+            {
+                Console.WriteLine("Ini file exists...");
+            }
         }
 
         public string Read(string Key, string Section = null)
         {
             var RetVal = new StringBuilder(255);
             GetPrivateProfileString(Section ?? EXE, Key, "", RetVal, 255, Path);
+
+            Console.WriteLine("key : " + Key + ", value : " + RetVal.ToString());
             return RetVal.ToString();
         }
 

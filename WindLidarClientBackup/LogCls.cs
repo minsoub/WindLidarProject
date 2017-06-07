@@ -18,8 +18,8 @@ namespace WindLidarClientBackup
         public void Log(string msg)
         {
             string path = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            string filePath = path + @"\Logs\Log" + DateTime.Today.ToString("yyyyMMdd") + ".log";
-            string dirPath = path + @"\Logs";
+            string filePath = @"D:\\Logs\Log" + DateTime.Today.ToString("yyyyMMdd") + ".log";
+            string dirPath =  @"D:\\Logs";
             string tmp;
 
             DirectoryInfo di = new DirectoryInfo(dirPath);
