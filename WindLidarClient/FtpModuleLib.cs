@@ -123,6 +123,7 @@ namespace WindLidarClient
 
             // WebRequest.Create로 Http,Ftp,File Request 객체를 모두 생성할 수 있다.
             FtpWebRequest req = (FtpWebRequest)WebRequest.Create(ftpPath);
+            req.UsePassive = false;
             // FTP 업로드한다는 것을 표시
             req.Method = WebRequestMethods.Ftp.UploadFile;
             // 쓰기 권한이 있는 FTP 사용자 로그인 지정
@@ -182,7 +183,7 @@ namespace WindLidarClient
                 FtpWebRequest requestDir = (FtpWebRequest)FtpWebRequest.Create(new Uri(directory));
                 requestDir.Method = WebRequestMethods.Ftp.MakeDirectory;
                 requestDir.Credentials = new NetworkCredential(ftpUser, ftpPass);
-                requestDir.UsePassive = true;
+                requestDir.UsePassive = false;
                 requestDir.UseBinary = true;
                 requestDir.KeepAlive = false;
                 FtpWebResponse response = (FtpWebResponse)requestDir.GetResponse();

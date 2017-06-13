@@ -123,7 +123,7 @@ namespace WindLidarClient
                         c.Send(buf, buf.Length, m_stHost, stPort);
                         //log.Log("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"]) " + msg);
                         Console.WriteLine("Alaram send msg : " + msg);
-                        main.setMsg("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"])" + msg);
+                        //main.setMsg("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"])" + msg);
 
                         c.Client.ReceiveTimeout = 2000;     // 2 second
                         IPEndPoint ipepLocal = new IPEndPoint(IPAddress.Any, stPort+1);     // 10001 + 1
@@ -140,7 +140,7 @@ namespace WindLidarClient
                             string[] msgArr = data.Split(delimiterChar);
                             //log.Log("Alarm receive msg(almDataSend) : " + data);
                             Console.WriteLine("Alaram get msg : " + data);
-                            main.setMsg("Alarm receive msg(almDataSend) : " + data);
+                            //main.setMsg("Alarm receive msg(almDataSend) : " + data);
 
                             if (msgArr[3] == "ok")
                             {

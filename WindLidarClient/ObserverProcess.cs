@@ -203,11 +203,11 @@ namespace WindLidarClient
                         using (UdpClient c = new UdpClient(m_cstLocalPort))  // source port
                         {
                             c.Send(buf, buf.Length, m_stHost, stPort);
-                            log("[ StatusSender ] " + msg);
+                            // log("[ StatusSender ] " + msg);
                         }
                     }catch(Exception ex)
                     {
-                        log("[ StatusSender error ] : " + ex.ToString());
+                        log("[ StatusSender error ] status send error : " + ex.ToString());
                     }
 
                     waitHandle.WaitOne(1000 * m_sts_sleep_time);  // 60 second
@@ -301,23 +301,35 @@ namespace WindLidarClient
                                 {
                                     // FTP 데이터 전송
                                     ok = dataProcess.StaftpSend(FTP_URI, m_host, m_port, m_id, m_pass);
-
+                                    log("[STA] ftp send data ok.");
                                     // 데이터 백업 처리
                                     if (ok == true)
                                     {
-                                        log("[FileMoveProcess] called....");
+                                        //log("[FileMoveProcess] called....");
                                         if (dataProcess.FileStaMoveProcess() == true)
                                         {
+                                            log("[STA] file move ok.");
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
-                                            dataProcess.tmpSave(m_sourcePath);
-                                            //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
-                                            double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
-
-                                            Console.WriteLine("s1 : " + span + " > 60 * 60 => true[old data]...??? [" + DateTime.Now+", "+ dataProcess.getCheckDate() + "]");
-                                            if (span > (60 * 60))        // 읽은 데이터가 현재보다 60분 이전 데이터이면 오래된 데이터이므로
+                                            if (ok == true)
                                             {
-                                                log("old data found................");
+                                                ok = dataProcess.tmpSave(m_sourcePath);
+                                                if (ok == true)
+                                                {
+                                                    //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
+                                                    double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
+
+                                                    Console.WriteLine("s1 : " + span + " > 60 * 60 => true[old data]...??? [" + DateTime.Now + ", " + dataProcess.getCheckDate() + "]");
+                                                    if (span > (60 * 60))        // 읽은 데이터가 현재보다 60분 이전 데이터이면 오래된 데이터이므로
+                                                    {
+                                                        log("old data found................");
+                                                        old_data = true;
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                log("[STA] End msg send error.");
                                                 old_data = true;
                                             }
                                         }
