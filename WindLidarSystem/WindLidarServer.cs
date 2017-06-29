@@ -20,7 +20,7 @@ namespace WindLidarSystem
         private char[] delimiterChar = { ':' };
         private char[] delimiterChar2 = { '=' };
         private Point mousePoint;
-
+        private LogCls log;
         public struct StsInfo
         {
             public string s_code;
@@ -43,7 +43,7 @@ namespace WindLidarSystem
         {
             InitializeComponent();
 
-
+            log = new LogCls();
             //this.Text = "";
             //this.ControlBox = false;
 
@@ -195,20 +195,26 @@ namespace WindLidarSystem
 
         private void logMessage(ListBox _lstLog, string _msg)
         {
-            if (_lstLog.InvokeRequired)     // 해당 컨트롤이 Invoke를 요구한다면
+            try
             {
-                _lstLog.Invoke(new logMessageDelegate(logMessage), new object[] { _lstLog, _msg });
-            }
-            else
-            {
-                string sendTime = " [" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "]";
-                // lstLog.Items.Insert(0, sendTime + _msg); //  Add(msg); 
-                if (lstLog.Items.Count == 5000)
+                if (_lstLog.InvokeRequired)     // 해당 컨트롤이 Invoke를 요구한다면
                 {
-                    lstLog.Items.RemoveAt(0);
+                    _lstLog.Invoke(new logMessageDelegate(logMessage), new object[] { _lstLog, _msg });
                 }
-                lstLog.Items.Add(sendTime + _msg); //  Add(msg); 
-                lstLog.SelectedIndex = lstLog.Items.Count - 1;
+                else
+                {
+                    string sendTime = " [" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "]";
+                    // lstLog.Items.Insert(0, sendTime + _msg); //  Add(msg); 
+                    if (lstLog.Items.Count == 5000)
+                    {
+                        lstLog.Items.RemoveAt(0);
+                    }
+                    lstLog.Items.Add(sendTime + _msg); //  Add(msg); 
+                    lstLog.SelectedIndex = lstLog.Items.Count - 1;
+                }
+            }catch(Exception ex)
+            {
+                log.Log("[logMessage] error : " + ex.ToString());
             }
         }
 
@@ -217,37 +223,45 @@ namespace WindLidarSystem
 
         public void stsMessage(string msg)
         {
-            string[] msgArr = msg.Split(delimiterChar);
+            try
+            {
+                string[] msgArr = msg.Split(delimiterChar);
 
-            string stCode = msgArr[1];
-            string stSts = msgArr[2];
-            string rcvTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            StsInfo item = new StsInfo();
-            item.s_code = stCode;
-            item.s_sts = stSts;
-            item.s_lastDt = rcvTime;
-            if (stList.Count() == 0)
-            {
-                stList.Add(item);
-            }
-            else
-            {
-                int found = 0;
-                for (int i=0; i<stList.Count(); i++)
+                string stCode = msgArr[1];
+                string stSts = msgArr[2];
+                string rcvTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                StsInfo item = new StsInfo();
+                item.s_code = stCode;
+                item.s_sts = stSts;
+                item.s_lastDt = rcvTime;
+                if (stList.Count() == 0)
                 {
-                    if (stList[i].s_code == item.s_code)
+                    stList.Add(item);
+                }
+                else
+                {
+                    int found = 0;
+                    for (int i = 0; i < stList.Count(); i++)
                     {
-                        stList[i] = item;
-                        found = 1;
+                        if (stList[i].s_code == item.s_code)
+                        {
+                            stList[i] = item;
+                            found = 1;
+                        }
+                    }
+                    if (found == 0)
+                    {
+                        stList.Add(item);   // new
                     }
                 }
-                if (found == 0)
-                {
-                    stList.Add(item);   // new
-                }
+
+                refreshWindow();
+            }
+            catch (Exception ex)
+            {
+                log.Log("[stsMessage] error : " + ex.ToString());
             }
 
-            refreshWindow();
         }
 
         /**
@@ -255,183 +269,246 @@ namespace WindLidarSystem
          */
         public void ftsMessage(string msg)
         {
-            string[] msgArr = msg.Split(delimiterChar);
+            try
+            {
+                string[] msgArr = msg.Split(delimiterChar);
 
-            string stCode = msgArr[1];
-            string stSts = msgArr[2];
-            string rcvTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            FtsInfo item = new FtsInfo();
-            item.s_code = stCode;
-            item.s_sts = stSts;
-            item.s_lastDt = rcvTime;
-            if (ftList.Count() == 0)
-            {
-                ftList.Add(item);
-            }
-            else
-            {
-                int found = 0;
-                for (int i = 0; i < ftList.Count(); i++)
+                string stCode = msgArr[1];
+                string stSts = msgArr[2];
+                string rcvTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                FtsInfo item = new FtsInfo();
+                item.s_code = stCode;
+                item.s_sts = stSts;
+                item.s_lastDt = rcvTime;
+                if (ftList.Count() == 0)
                 {
-                    if (ftList[i].s_code == item.s_code)
+                    ftList.Add(item);
+                }
+                else
+                {
+                    int found = 0;
+                    for (int i = 0; i < ftList.Count(); i++)
                     {
-                        ftList[i] = item;
-                        found = 1;
+                        if (ftList[i].s_code == item.s_code)
+                        {
+                            ftList[i] = item;
+                            found = 1;
+                        }
+                    }
+                    if (found == 0)
+                    {
+                        ftList.Add(item);   // new
                     }
                 }
-                if (found == 0)
-                {
-                    ftList.Add(item);   // new
-                }
-            }
 
-            refreshWindow();
+                refreshWindow();
+            }
+            catch (Exception ex)
+            {
+                log.Log("[ftsMessage] error : " + ex.ToString());
+            }
         }
 
 
         private void refreshWindow()
         {
-            for (int i=0; i<stList.Count(); i++)
+            try
             {
-                StsInfo item = stList[i];
+                for (int i = 0; i < stList.Count(); i++)
+                {
+                    StsInfo item = stList[i];
 
-                if (item.s_code == "13211")       // 일산
-                {
-                    UpdateRadioStsA(item.s_sts);
-                    UpdateLableStaLastTime(item.s_lastDt);
-                }
-                if (item.s_code == "13210")       // 송도
-                {
-                    UpdateRadioStsB(item.s_sts);
-                    UpdateLableStbLastTime(item.s_lastDt);
-                }
-                if (item.s_code == "13206")       //구로
-                {
-                    UpdateRadioStsC(item.s_sts);
-                    UpdateLableStcLastTime(item.s_lastDt);
-                }
+                    if (item.s_code == "13211")       // 일산
+                    {
+                        UpdateRadioStsA(item.s_sts);
+                        UpdateLableStaLastTime(item.s_lastDt);
+                    }
+                    if (item.s_code == "13210")       // 송도
+                    {
+                        UpdateRadioStsB(item.s_sts);
+                        UpdateLableStbLastTime(item.s_lastDt);
+                    }
+                    if (item.s_code == "13206")       //구로
+                    {
+                        UpdateRadioStsC(item.s_sts);
+                        UpdateLableStcLastTime(item.s_lastDt);
+                    }
 
+                }
+                for (int i = 0; i < ftList.Count(); i++)
+                {
+                    FtsInfo ftm = ftList[i];
+
+                    if (ftm.s_code == "13211")       // 일산
+                    {
+                        UpdateLableFtaLastTime(ftm.s_lastDt);
+                    }
+                    if (ftm.s_code == "13210")       // 송도
+                    {
+                        UpdateLableFtbLastTime(ftm.s_lastDt);
+                    }
+                    if (ftm.s_code == "13206")       //구로
+                    {
+                        UpdateLableFtcLastTime(ftm.s_lastDt);
+                    }
+                }
             }
-            for (int i=0; i<ftList.Count(); i++)
+            catch (Exception ex)
             {
-                FtsInfo ftm = ftList[i];
-
-                if (ftm.s_code == "13211")       // 일산
-                {
-                    UpdateLableFtaLastTime(ftm.s_lastDt);
-                }
-                if (ftm.s_code == "13210")       // 송도
-                {
-                    UpdateLableFtbLastTime(ftm.s_lastDt);
-                }
-                if (ftm.s_code == "13206")       //구로
-                {
-                    UpdateLableFtcLastTime(ftm.s_lastDt);
-                }                
+                log.Log("[refreshWindow] error : " + ex.ToString());
             }
         }
 
         public void stsDB(string msg)
         {
-            if (msg == null) return;
-            string[] msgArr = msg.Split(delimiterChar2);
+            try
+            {
+                if (msg == null) return;
+                string[] msgArr = msg.Split(delimiterChar2);
 
-            string stCode = msgArr[1];
-            string stSts = msgArr[2];
-            string rcvTime = msgArr[3];
-            StsInfo item = new StsInfo();
-            item.s_code = stCode;
-            item.s_sts = stSts;
-            item.s_lastDt = rcvTime;
-            if (stList.Count() == 0)
-            {
-                stList.Add(item);
-            }
-            else
-            {
-                int found = 0;
-                for (int i = 0; i < stList.Count(); i++)
+                string stCode = msgArr[1];
+                string stSts = msgArr[2];
+                string rcvTime = msgArr[3];
+                StsInfo item = new StsInfo();
+                item.s_code = stCode;
+                item.s_sts = stSts;
+                item.s_lastDt = rcvTime;
+                if (stList.Count() == 0)
                 {
-                    if (stList[i].s_code == item.s_code)
+                    stList.Add(item);
+                }
+                else
+                {
+                    int found = 0;
+                    for (int i = 0; i < stList.Count(); i++)
                     {
-                        stList[i] = item;
-                        found = 1;
+                        if (stList[i].s_code == item.s_code)
+                        {
+                            stList[i] = item;
+                            found = 1;
+                        }
+                    }
+                    if (found == 0)
+                    {
+                        stList.Add(item);   // new
                     }
                 }
-                if (found == 0)
-                {
-                    stList.Add(item);   // new
-                }
-            }
 
-            refreshWindow();
+                refreshWindow();
+            }
+            catch (Exception ex)
+            {
+                log.Log("[stsDB] error : " + ex.ToString());
+            }
         }
 
         private void UpdateLableStaLastTime(string msg)
         {
-            if (lblstaLastTime.InvokeRequired)
+            try
             {
-                lblstaLastTime.BeginInvoke(new Action(() => lblstaLastTime.Text = msg));
+                if (lblstaLastTime.InvokeRequired)
+                {
+                    lblstaLastTime.BeginInvoke(new Action(() => lblstaLastTime.Text = msg));
+                }
+                else
+                {
+                    lblstaLastTime.Text = msg;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblstaLastTime.Text = msg;
+                log.Log("[UpdateLableStaLastTime] error : " + ex.ToString());
             }
         }
         private void UpdateLableStbLastTime(string msg)
         {
-            if (lblstbLastTime.InvokeRequired)
+            try
             {
-                lblstbLastTime.BeginInvoke(new Action(() => lblstbLastTime.Text = msg));
+                if (lblstbLastTime.InvokeRequired)
+                {
+                    lblstbLastTime.BeginInvoke(new Action(() => lblstbLastTime.Text = msg));
+                }
+                else
+                {
+                    lblstbLastTime.Text = msg;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblstbLastTime.Text = msg;
+                log.Log("[UpdateLableStbLastTime] error : " + ex.ToString());
             }
         }
         private void UpdateLableStcLastTime(string msg)
         {
-            if (lblstcLastTime.InvokeRequired)
+            try
             {
-                lblstcLastTime.BeginInvoke(new Action(() => lblstcLastTime.Text = msg));
+                if (lblstcLastTime.InvokeRequired)
+                {
+                    lblstcLastTime.BeginInvoke(new Action(() => lblstcLastTime.Text = msg));
+                }
+                else
+                {
+                    lblstcLastTime.Text = msg;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblstcLastTime.Text = msg;
+                log.Log("[UpdateLableStcLastTime] error : " + ex.ToString());
             }
         }
 
         private void UpdateLableFtaLastTime(string msg)
         {
-            if (lblstaDataLastTime.InvokeRequired)
+            try
             {
-                lblstaDataLastTime.BeginInvoke(new Action(() => lblstaDataLastTime.Text = msg));
+                if (lblstaDataLastTime.InvokeRequired)
+                {
+                    lblstaDataLastTime.BeginInvoke(new Action(() => lblstaDataLastTime.Text = msg));
+                }
+                else
+                {
+                    lblstaDataLastTime.Text = msg;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblstaDataLastTime.Text = msg;
+                log.Log("[UpdateLableFtaLastTime] error : " + ex.ToString());
             }
         }
         private void UpdateLableFtbLastTime(string msg)
         {
-            if (lblstbDataLastTime.InvokeRequired)
+            try
             {
-                lblstbDataLastTime.BeginInvoke(new Action(() => lblstbDataLastTime.Text = msg));
+                if (lblstbDataLastTime.InvokeRequired)
+                {
+                    lblstbDataLastTime.BeginInvoke(new Action(() => lblstbDataLastTime.Text = msg));
+                }
+                else
+                {
+                    lblstbDataLastTime.Text = msg;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblstbDataLastTime.Text = msg;
+                log.Log("[UpdateLableFtbLastTime] error : " + ex.ToString());
             }
         }
         private void UpdateLableFtcLastTime(string msg)
         {
-            if (lblstcDataLastTime.InvokeRequired)
+            try
             {
-                lblstcDataLastTime.BeginInvoke(new Action(() => lblstcDataLastTime.Text = msg));
+                if (lblstcDataLastTime.InvokeRequired)
+                {
+                    lblstcDataLastTime.BeginInvoke(new Action(() => lblstcDataLastTime.Text = msg));
+                }
+                else
+                {
+                    lblstcDataLastTime.Text = msg;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblstcDataLastTime.Text = msg;
+                log.Log("[UpdateLableFtcLastTime] error : " + ex.ToString());
             }
         }
 
@@ -440,27 +517,34 @@ namespace WindLidarSystem
          */
         private void UpdateRadioStsA(string msg)
         {
-            if (msg == "0")
+            try
             {
-                if (panel13211.InvokeRequired)
+                if (msg == "0")
                 {
-                    panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.btn_off));
+                    if (panel13211.InvokeRequired)
+                    {
+                        panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.btn_off));
+                    }
+                    else
+                    {
+                        panel13211.BackgroundImage = Properties.Resources.btn_off;
+                    }
                 }
-                else
+                else if (msg == "1")
                 {
-                    panel13211.BackgroundImage = Properties.Resources.btn_off;
+                    if (panel13211.InvokeRequired)
+                    {
+                        panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.btn_on));
+                    }
+                    else
+                    {
+                        panel13211.BackgroundImage = Properties.Resources.btn_on;
+                    }
                 }
             }
-            else if (msg == "1")
+            catch (Exception ex)
             {
-                if (panel13211.InvokeRequired)
-                {
-                    panel13211.BeginInvoke(new Action(() => panel13211.BackgroundImage = Properties.Resources.btn_on));
-                }
-                else
-                {
-                    panel13211.BackgroundImage = Properties.Resources.btn_on;
-                }
+                log.Log("[UpdateRadioStsA] error : " + ex.ToString());
             }
         }                        
         /**
@@ -468,27 +552,34 @@ namespace WindLidarSystem
          */
         private void UpdateRadioStsB(string msg)
         {
-            if (msg == "0")
+            try
             {
-                if (panel13210.InvokeRequired)
+                if (msg == "0")
                 {
-                    panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.btn_off));
+                    if (panel13210.InvokeRequired)
+                    {
+                        panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.btn_off));
+                    }
+                    else
+                    {
+                        panel13210.BackgroundImage = Properties.Resources.btn_off;
+                    }
                 }
-                else
+                else if (msg == "1")
                 {
-                    panel13210.BackgroundImage = Properties.Resources.btn_off;
+                    if (panel13210.InvokeRequired)
+                    {
+                        panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.btn_on));
+                    }
+                    else
+                    {
+                        panel13210.BackgroundImage = Properties.Resources.btn_on;
+                    }
                 }
             }
-            else if (msg == "1")
+            catch (Exception ex)
             {
-                if (panel13210.InvokeRequired)
-                {
-                    panel13210.BeginInvoke(new Action(() => panel13210.BackgroundImage = Properties.Resources.btn_on));
-                }
-                else
-                {
-                    panel13210.BackgroundImage = Properties.Resources.btn_on;
-                }
+                log.Log("[UpdateRadioStsB] error : " + ex.ToString());
             }
         }
         /**
@@ -496,61 +587,73 @@ namespace WindLidarSystem
          */
         private void UpdateRadioStsC(string msg)
         {
-            if (msg == "0")
+            try
             {
-                if (panel13206.InvokeRequired)
+                if (msg == "0")
                 {
-                    panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.btn_off));
+                    if (panel13206.InvokeRequired)
+                    {
+                        panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.btn_off));
+                    }
+                    else
+                    {
+                        panel13206.BackgroundImage = Properties.Resources.btn_off;
+                    }
                 }
-                else
+                else if (msg == "1")
                 {
-                    panel13206.BackgroundImage = Properties.Resources.btn_off;
+                    if (panel13206.InvokeRequired)
+                    {
+                        panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.btn_on));
+                    }
+                    else
+                    {
+                        panel13206.BackgroundImage = Properties.Resources.btn_on;
+                    }
                 }
             }
-            else if (msg == "1")
+            catch (Exception ex)
             {
-                if (panel13206.InvokeRequired)
-                {
-                    panel13206.BeginInvoke(new Action(() => panel13206.BackgroundImage = Properties.Resources.btn_on));
-                }
-                else
-                {
-                    panel13206.BackgroundImage = Properties.Resources.btn_on;
-                }
+                log.Log("[UpdateRadioStsC] error : " + ex.ToString());
             }
                
         }
 
         private void lstLog_DrawItem(object sender, DrawItemEventArgs e)
         {
-            Console.WriteLine("lstLog_DrawItem called...");
-            if (lstLog.Items.Count == 0)
+            try
             {
-                return;
-            }
+                Console.WriteLine("lstLog_DrawItem called...");
+                if (lstLog.Items.Count == 0)
+                {
+                    return;
+                }
 
-            // owner draw를 사용하여 ListBox에 색칠하기
-            Brush myBrush;
-            string msg = lstLog.Items[e.Index].ToString();
-            Console.WriteLine(msg);
-            if (msg.Contains("error") == true) //<font color=red>") == true)
-            {
-                //lstLog.Items[e.Index] = lstLog.Items[e.Index].ToString().Replace("<font color=red>", "");
-                myBrush = Brushes.Red;
-            }
-            else if(msg.Contains("info") == true) // <font color=blue>") == true)
-            {
-                lstLog.Items[e.Index] = lstLog.Items[e.Index].ToString().Replace("<font color=blue>", "");
-                myBrush = Brushes.Blue;
-            }
-            else
-            {
-                myBrush = Brushes.DarkGray;
-            }
-            e.Graphics.DrawString(lstLog.Items[e.Index].ToString(), e.Font, myBrush, e.Bounds, StringFormat.GenericDefault);
+                // owner draw를 사용하여 ListBox에 색칠하기
+                Brush myBrush;
+                string msg = lstLog.Items[e.Index].ToString();
+                Console.WriteLine(msg);
+                if (msg.Contains("error") == true) //<font color=red>") == true)
+                {
+                    //lstLog.Items[e.Index] = lstLog.Items[e.Index].ToString().Replace("<font color=red>", "");
+                    myBrush = Brushes.Red;
+                }
+                else if (msg.Contains("info") == true) // <font color=blue>") == true)
+                {
+                    lstLog.Items[e.Index] = lstLog.Items[e.Index].ToString().Replace("<font color=blue>", "");
+                    myBrush = Brushes.Blue;
+                }
+                else
+                {
+                    myBrush = Brushes.DarkGray;
+                }
+                e.Graphics.DrawString(lstLog.Items[e.Index].ToString(), e.Font, myBrush, e.Bounds, StringFormat.GenericDefault);
 
-            e.DrawFocusRectangle();
-
+                e.DrawFocusRectangle();
+            }catch(Exception ex)
+            {
+                log.Log("DrawItem error : " + ex.ToString());
+            }
         }
 
         private void defaultClear()
@@ -673,11 +776,6 @@ namespace WindLidarSystem
                  btnStop.PerformClick();                
             }
             Application.Exit();
-        }
-
-        private void WindLidarServer_Load(object sender, EventArgs e)
-        {
-
         }
 
     }

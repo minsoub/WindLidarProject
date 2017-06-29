@@ -162,11 +162,13 @@ namespace WindLidarSystem
                             // FTP 전송 - need module
                             atsProcess.setFtpInfo(fileData.s_code, FTP_URI, ParamInitInfo.Instance.m_ftpIP, ParamInitInfo.Instance.m_ftpPort,
                                 ParamInitInfo.Instance.m_ftpUser, ParamInitInfo.Instance.m_ftpPass);
+
                             bool sts = atsProcess.ftpStaSendData(fileData);
 
                             if (sts == false)
                             {
                                 Console.WriteLine("[StaThreadProcess] ftpSendData false...........[" + fileData.s_code + "]");
+                                log("[StaThreadProcess] ftpSendData false...........["+fileData.s_code+" : " + fileData.no + "]");
                                 atsProcess.ftpFailUpdate(fileData);
                             }
                             found = 1;
@@ -225,8 +227,12 @@ namespace WindLidarSystem
                             {
                                 Console.WriteLine("[WindLidarDataProcess] ftpSendData false...........[" + fileData.s_code + "]");
                                 ftsProcess.ftpFailUpdate(fileData);
+                                found = 0;
                             }
-                            found = 1;
+                            else
+                            {
+                                found = 1;
+                            }
                         }
                         else
                         {
