@@ -42,6 +42,8 @@ namespace WindLidarSystem
             path = "";
             staFileName = "";
             iniFileName = "";
+            rtdFileName = "";
+            rawFileName = "";
             fileCount = 0;
             sendCount = 0;
             type = "";

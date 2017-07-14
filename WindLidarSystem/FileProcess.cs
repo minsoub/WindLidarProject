@@ -69,7 +69,7 @@ namespace WindLidarSystem
                             arrTime2[0], arrTime2[1], arrTime2[2], arrTime2[3], arrTime2[4], arrTime2[5]
                         );
 
-                        if (arrMsg[6].IndexOf("DBS") == -1)
+                        if (arrMsg[6] != "" && arrMsg[6].IndexOf("DBS") == -1)  
                         {
                             sql = String.Format("UPDATE T_RCV_NOT_DBS_FILE set acc_file_cnt = {0} WHERE s_code = '{1}' and st_time='{2}' and et_time='{3}'",
                             arrMsg[5], arrMsg[1], st_time, et_time
@@ -107,7 +107,8 @@ namespace WindLidarSystem
                                 arrTime2[0], arrTime2[1], arrTime2[2], arrTime2[3], arrTime2[4], arrTime2[5]
                             );
 
-                            if (arrMsg[6].IndexOf("DBS") == -1)
+                            if ((arrMsg[6] != "" && arrMsg[6].IndexOf("DBS") == -1) || (arrMsg[7] != "" && arrMsg[8].IndexOf("DBS") == -1)
+                                || (arrMsg[8] != "" && arrMsg[8].IndexOf("DBS") == -1))     
                             {
                                 // sts insert
                                 sql = String.Format("insert into T_RCV_NOT_DBS_FILE (s_code, st_time, et_time, real_file_cnt, acc_file_cnt, err_chk, s_chk, srv_file_cnt, ini_name, raw_name, rtd_name, reg_dt) values"
@@ -578,6 +579,9 @@ namespace WindLidarSystem
 
             sendInfo = new SndDataInfo();
             sendInfo.mode = info.mode;
+            sendInfo.iniFileName = "";
+            sendInfo.rawFileName = "";
+            sendInfo.rtdFileName = "";
             Console.WriteLine("ftpSendData mode : " + sendInfo.mode);
 
             try
@@ -782,7 +786,7 @@ namespace WindLidarSystem
                     {
                         Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + iniFull);
                         log.Log("HasWritePermissionOnDir file not exist [error] : " + iniFull);
-                        return false;
+                        //return false;
                     }
                     // raw check
                     string rawFull = Path.Combine(dataPath, info.raw_name);
@@ -796,7 +800,7 @@ namespace WindLidarSystem
                     {
                         Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rawFull);
                         log.Log("HasWritePermissionOnDir file not exist [error] : " + rawFull);
-                        return false;
+                       // return false;
                     }
 
                     if (info.rtd_name != "")
@@ -813,7 +817,7 @@ namespace WindLidarSystem
                         {
                             Console.WriteLine("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
                             log.Log("HasWritePermissionOnDir file not exist [error] : " + rtdFull);
-                            return false;
+                            //return false;
                         }
                     }
                 }
@@ -866,32 +870,39 @@ namespace WindLidarSystem
                 string destFileName = "";
                 if (info.mode == 1)
                 {
-                    // Ini 파일 이동            
-                    destFileName = Path.Combine(backupPath, sendInfo.iniFileName);
-                    if (File.Exists(destFileName))
+                    // Ini 파일 이동  
+                    if (sendInfo.iniFileName != "")
                     {
-                        File.Delete(destFileName);
+                        destFileName = Path.Combine(backupPath, sendInfo.iniFileName);
+                        if (File.Exists(destFileName))
+                        {
+                            File.Delete(destFileName);
+                        }
+                        FileInfo iniFile = new FileInfo(sendInfo.iniFullFileName);
+                        iniFile.MoveTo(destFileName);
                     }
-                    FileInfo iniFile = new FileInfo(sendInfo.iniFullFileName);
-                    iniFile.MoveTo(destFileName);
-
                     // rtd 파일 이동
-                    destFileName = Path.Combine(backupPath, sendInfo.rtdFileName);
-                    if (File.Exists(destFileName))
+                    if (sendInfo.rtdFileName != "")
                     {
-                        File.Delete(destFileName);
+                        destFileName = Path.Combine(backupPath, sendInfo.rtdFileName);
+                        if (File.Exists(destFileName))
+                        {
+                            File.Delete(destFileName);
+                        }
+                        FileInfo rtdFile = new FileInfo(sendInfo.rtdFullFileName);
+                        rtdFile.MoveTo(destFileName);
                     }
-                    FileInfo rtdFile = new FileInfo(sendInfo.rtdFullFileName);
-                    rtdFile.MoveTo(destFileName);
-
                     // raw 파일 이동
-                    destFileName = Path.Combine(backupPath, sendInfo.rawFileName);
-                    if (File.Exists(destFileName))
+                    if (sendInfo.rawFileName != "")
                     {
-                        File.Delete(destFileName);
+                        destFileName = Path.Combine(backupPath, sendInfo.rawFileName);
+                        if (File.Exists(destFileName))
+                        {
+                            File.Delete(destFileName);
+                        }
+                        FileInfo rawFile = new FileInfo(sendInfo.rawFullFileName);
+                        rawFile.MoveTo(destFileName);
                     }
-                    FileInfo rawFile = new FileInfo(sendInfo.rawFullFileName);
-                    rawFile.MoveTo(destFileName);
                 }
                 else
                 {

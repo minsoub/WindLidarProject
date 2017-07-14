@@ -97,11 +97,16 @@ namespace WindLidarSystem
             else
             {
                 // Ini 파일 전송
-                ftpPath = ftp_url + "/" + mData.iniFileName;
-                if (sendData(ftpPath, mData.iniFullFileName))
+                if (mData.iniFileName != "")
                 {
-                    mData.sendCount++;
+                    ftpPath = ftp_url + "/" + mData.iniFileName;
+                    if (sendData(ftpPath, mData.iniFullFileName))
+                    {
+                        mData.sendCount++;
+                    }
                 }
+
+
                 if (mData.rtdFileName != "")
                 {
                     // rtd 파일전송
@@ -111,11 +116,14 @@ namespace WindLidarSystem
                         mData.sendCount++;
                     }
                 }
-                // raw 파일전송
-                ftpPath = ftp_url + "/" + mData.rawFileName;
-                if (sendData(ftpPath, mData.rawFullFileName))
+                if (mData.rawFileName != "")
                 {
-                    mData.sendCount++;
+                    // raw 파일전송
+                    ftpPath = ftp_url + "/" + mData.rawFileName;
+                    if (sendData(ftpPath, mData.rawFullFileName))
+                    {
+                        mData.sendCount++;
+                    }
                 }
             }
 

@@ -96,7 +96,7 @@ namespace WindLidarSystem
             panel13210.BackgroundImage = Properties.Resources.btn_off;
             panel13210.BackgroundImageLayout = ImageLayout.Stretch;
 
-            panel1.BackgroundImage = Properties.Resources.ridar;
+            panel1.BackgroundImage = Properties.Resources.ridar2;
             panel1.BackgroundImageLayout = ImageLayout.Stretch;
 
             //panelClose.BackgroundImage = Properties.Resources.close;
