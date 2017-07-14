@@ -405,5 +405,10 @@ namespace WindLidarClient
             }
             Application.Exit();
         }
+
+        private void WindClientForm_Load(object sender, EventArgs e)
+        {
+            btnStart.PerformClick();
+        }
     }
 }

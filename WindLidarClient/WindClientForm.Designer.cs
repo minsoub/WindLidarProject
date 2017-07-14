@@ -294,7 +294,7 @@
             this.lblSmall.BackColor = System.Drawing.Color.DodgerBlue;
             this.lblSmall.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.lblSmall.ForeColor = System.Drawing.Color.White;
-            this.lblSmall.Location = new System.Drawing.Point(861, 9);
+            this.lblSmall.Location = new System.Drawing.Point(855, 9);
             this.lblSmall.Name = "lblSmall";
             this.lblSmall.Size = new System.Drawing.Size(35, 16);
             this.lblSmall.TabIndex = 12;
@@ -328,6 +328,7 @@
             this.Controls.Add(this.groupBox1);
             this.Name = "WindClientForm";
             this.Text = "WindLidar Client Program";
+            this.Load += new System.EventHandler(this.WindClientForm_Load);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.WindClientForm_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.WindClientForm_MouseMove);
             this.groupBox1.ResumeLayout(false);

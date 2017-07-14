@@ -56,28 +56,39 @@ namespace WindLidarClient
                 log.Log("FTP Server[sendDataToFtpServer] : Directory create error......[" + ftp_url + "]");
                 return 0;
             }
+           
+            string ftpPath = "";
 
-            // Ini 파일 전송
-            string ftpPath = ftp_url + "/" + info.iniFile;   //  mData.iniFileName;
-            if (sendData(ftpPath, info.iniFullName))   //  mData.iniFullFileName))
+            if (info.iniFile != "")
             {
-                mData.sendCount++;
+                // Ini 파일 전송
+                ftpPath = ftp_url + "/" + info.iniFile;   //  mData.iniFileName;
+                if (sendData(ftpPath, info.iniFullName))   //  mData.iniFullFileName))
+                {
+                    mData.sendCount++;
+                }
             }
             
             // rtd 파일 전송
             //foreach (SndDataInfo.sFileInfo sInfo in mData.lstInfo)
             //{
-            ftpPath = ftp_url + "/" + info.rtdFile;  //  sInfo.fileName;
+            if (info.rtdFile != "")
+            {
+                ftpPath = ftp_url + "/" + info.rtdFile;  //  sInfo.fileName;
                 if (sendData(ftpPath, info.rtdFullName))   // sInfo.fullFileName))
                 {
                     mData.sendCount++;
                 }
+            }
             //}
             // raw 파일 전송
-            ftpPath = ftp_url + "/" + info.rawFile;   //  mData.iniFileName;
-            if (sendData(ftpPath, info.rawFullName))   //  mData.iniFullFileName))
+            if (info.rawFile != "")
             {
-                mData.sendCount++;
+                ftpPath = ftp_url + "/" + info.rawFile;   //  mData.iniFileName;
+                if (sendData(ftpPath, info.rawFullName))   //  mData.iniFullFileName))
+                {
+                    mData.sendCount++;
+                }
             }
 
             //log.Log("[ FtpSend ] FTP URI[sendDataToFtpServer] : " + ftpPath);
@@ -121,6 +132,9 @@ namespace WindLidarClient
         {
             bool result = false;
 
+            if (inputFile == null || inputFile == "")
+                return false;
+
             // WebRequest.Create로 Http,Ftp,File Request 객체를 모두 생성할 수 있다.
             FtpWebRequest req = (FtpWebRequest)WebRequest.Create(ftpPath);
             req.UsePassive = false;
@@ -129,10 +143,13 @@ namespace WindLidarClient
             // 쓰기 권한이 있는 FTP 사용자 로그인 지정
             req.Credentials = new NetworkCredential(ftpUser, ftpPass);
 
+            //log.Log("[sendData] ftpPath :" + ftpPath + ", inputFile : " + inputFile);
+
             // 입력파일을 바이트 배열로 읽음
             byte[] data;
             using (StreamReader reader = new StreamReader(inputFile))
             {
+                //data = Encoding.UTF8.GetBytes(reader.ReadToEnd());
                 data = Encoding.UTF8.GetBytes(reader.ReadToEnd());
             }
 

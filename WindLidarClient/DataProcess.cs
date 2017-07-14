@@ -417,28 +417,28 @@ namespace WindLidarClient
 
             // raw, ini, rtd 파일 전송
             SndDataInfo.sFileInfo sfDBS = getSendData(dir, "DBS");
-            if (sfDBS.rawFile != "")
+            if (sfDBS.fileCnt > 0)
             {
                 sendInfo.lstInfo.Add(sfDBS);
                 result = true;
             }
 
             SndDataInfo.sFileInfo sfPPI = getSendData(dir, "PPI");
-            if (sfPPI.rawFile != "")
+            if (sfPPI.fileCnt > 0)
             {
                 result = true;
                 sendInfo.lstInfo.Add(sfPPI);
             }
 
             SndDataInfo.sFileInfo sfRHI = getSendData(dir, "RHI");
-            if (sfRHI.rawFile != "")
+            if (sfRHI.fileCnt > 0)
             {
                 result = true;
                 sendInfo.lstInfo.Add(sfRHI);
             }
 
             SndDataInfo.sFileInfo sfLOS = getSendData(dir, "LOS");
-            if (sfLOS.rawFile != "")
+            if (sfLOS.fileCnt > 0)
             {
                 result = true;
                 sendInfo.lstInfo.Add(sfLOS);
@@ -454,10 +454,16 @@ namespace WindLidarClient
         {
             // mode : DBS, PPI, RHI, LOS
             SndDataInfo.sFileInfo sf = new SndDataInfo.sFileInfo();
+            sf.fileCnt = 0;
+            sf.iniFile = "";
+            sf.rawFile = "";
+            sf.rtdFile = "";
+
             DateTime curDt = DateTime.Now;
             curDt = curDt.AddMinutes(-10);  // -10 minutes
             sf.rawFile = "";
             int idx = 0;
+            int firstChk = 0;
             string tmpDt2 = "";
             foreach (FileInfo fi in dir.GetFiles("*_"+mode+"*").OrderBy(fi => fi.Name))      // 날짜순 정렬
             {
@@ -465,12 +471,16 @@ namespace WindLidarClient
                 string ext = Path.GetExtension(file);
 
                 Console.WriteLine("ext : {0}", ext);
-                if (ext == ".raw")
+                if (ext == ".raw" || ext == ".ini" || ext == ".rtd")
                 {
-                    DateTime sd = convertTimeExtract(fi.Name);
-                    sf.startTime = sd.ToString("yyyy-MM-dd HH:mm:ss");
-                    sf.endTime = sf.startTime;
-                    m_chkDate = sd;                    
+                    if (firstChk == 0)
+                    {
+                        DateTime sd = convertTimeExtract(fi.Name);
+                        sf.startTime = sd.ToString("yyyy-MM-dd HH:mm:ss");
+                        sf.endTime = sf.startTime;
+                        m_chkDate = sd;
+                    }
+                    firstChk = 1;
                 }
 
                 if (ext == ".raw" || ext == ".ini" || ext == ".rtd")
@@ -484,11 +494,14 @@ namespace WindLidarClient
 
                     //Console.WriteLine("curDt : " + curDt.ToString("yyyy-MM-dd HH:mm:ss"));
                     //Console.WriteLine("pD : " + pD.ToString("yyyy-MM-dd HH:mm:ss"));
+                    // 디버그용
+                    fsLog.Log("SndDataInfo.sFileInfo getSendData pD : " + pD.ToString("yyyy-MM-dd HH:mm:ss"));
 
                     if (pD > curDt)     // 데이터 파일 날짜가 현재 날짜보다 10분 이전내에 포함되면 아직 파일 생성중이다.
                     {
                         sf.rawFile = "";
                         fsLog.Log("[getSendData()] : 데이터 파일 날짜가 현재 날짜보다 10분 이전 내에 포함되어 있어 전송대상에 제외됩니다["+pDt+", "+curDt.ToString("yyyy-MM-dd HH:mm:ss")+"]");
+                        sf.fileCnt = 0;
                         break;
                     }
 
@@ -502,21 +515,25 @@ namespace WindLidarClient
                     }
 
                     sendInfo.fileCount++;
+                    
 
                     if (ext == ".raw")
                     {
                         sf.rawFullName = fi.FullName;
                         sf.rawFile = fi.Name;
+                        sf.fileCnt++;
                     }
                     else if (ext == ".ini")
                     {
                         sf.iniFullName = fi.FullName;
                         sf.iniFile = fi.Name;
+                        sf.fileCnt++;
                     }
                     else if (ext == ".rtd")
                     {
                         sf.rtdFullName = fi.FullName;
                         sf.rtdFile = fi.Name;
+                        sf.fileCnt++;
                     }
                 }
             }
@@ -706,12 +723,12 @@ namespace WindLidarClient
                     + info.iniFile + ":" + info.rawFile + ":" + info.rtdFile + ":" +type+ ":"+p1+":"+p2+":"+p3+":"+p4+":"+p5+":S";
                 byte[] buf = Encoding.ASCII.GetBytes(msg);
                 int stPort = System.Convert.ToInt32(m_stPort);          // 10001
-
+                Console.WriteLine("File data send msg : " + msg);
                 using (UdpClient c = new UdpClient(m_ft_rcv_port))       // 10003
                 {
                     c.Send(buf, buf.Length, m_stHost, stPort);
                     //log.Log("File status data send (startStatusSendData :" + m_stHost + "[" + stPort + "]) " + msg);
-                    Console.WriteLine("File data send msg : " + msg);
+                   // Console.WriteLine("File data send msg : " + msg);
                     main.setMsg("File data send start (startStatusSendData :" + m_stHost + "[" + stPort + "])" + msg);
 
                     c.Client.ReceiveTimeout = 2000;     // 2 second
@@ -803,7 +820,20 @@ namespace WindLidarClient
                 }
                 else    // NOT STA
                 {
-                    msg = "FT:" + m_stCode + ":" + m_stHost + ":" + stDt + ":" + etDt + ":" + sendInfo.fileCount + ":" + info.rawFile + ":E";
+                    string fff = "";
+                    if (info.rawFile != "" && info.rawFile != null)
+                    {
+                        fff = info.rawFile;
+                    }
+                    else if(info.iniFile != "" && info.iniFile != null)
+                    {
+                        fff = info.iniFile;
+                    }
+                    else if(info.rtdFile != "" && info.rtdFile != null)
+                    {
+                        fff = info.rtdFile;
+                    }
+                    msg = "FT:" + m_stCode + ":" + m_stHost + ":" + stDt + ":" + etDt + ":" + sendInfo.fileCount + ":" + fff + ":E";
                     rcvPort = m_ft_rcv_port;
                 }
                
@@ -999,40 +1029,49 @@ namespace WindLidarClient
             try
             {
                 SndDataInfo.sFileInfo info = sendInfo.lstInfo[0];
-
-                // Ini 파일 이동            
-                string destFileName = info.iniFullName.Replace("DATA", "BACKUP");
-                FileInfo backFile = new FileInfo(destFileName);
-                string dirBackup = backFile.Directory.FullName;
-                if (!Directory.Exists(dirBackup))
+                string destFileName = "";
+                // Ini 파일 이동  
+                if (info.iniFullName != null)
                 {
-                    Directory.CreateDirectory(dirBackup);
-                }
-                if (File.Exists(destFileName))
-                {
-                    File.Delete(destFileName);
-                }
-                FileInfo iniFile = new FileInfo(info.iniFullName);
+                    destFileName = info.iniFullName.Replace("DATA", "BACKUP");
+                    FileInfo backFile = new FileInfo(destFileName);
+                    string dirBackup = backFile.Directory.FullName;
+                    if (!Directory.Exists(dirBackup))
+                    {
+                        Directory.CreateDirectory(dirBackup);
+                    }
+                    if (File.Exists(destFileName))
+                    {
+                        File.Delete(destFileName);
+                    }
 
-                iniFile.MoveTo(destFileName);
+                    FileInfo iniFile = new FileInfo(info.iniFullName);
+                    iniFile.MoveTo(destFileName);
+
+                }
 
                 // rtd 파일 이동
-                destFileName = info.rtdFullName.Replace("DATA", "BACKUP");
-                if (File.Exists(destFileName))
+                if (info.rtdFullName != null)
                 {
-                    File.Delete(destFileName);
+                    destFileName = info.rtdFullName.Replace("DATA", "BACKUP");
+                    if (File.Exists(destFileName))
+                    {
+                        File.Delete(destFileName);
+                    }
+                    FileInfo rtdFile = new FileInfo(info.rtdFullName);
+                    rtdFile.MoveTo(destFileName);
                 }
-                FileInfo rtdFile = new FileInfo(info.rtdFullName);
-                rtdFile.MoveTo(destFileName);
-
-                // raw 파일 이동
-                destFileName = info.rawFullName.Replace("DATA", "BACKUP");
-                if (File.Exists(destFileName))
+                if (info.rawFullName != null)
                 {
-                    File.Delete(destFileName);
+                    // raw 파일 이동
+                    destFileName = info.rawFullName.Replace("DATA", "BACKUP");
+                    if (File.Exists(destFileName))
+                    {
+                        File.Delete(destFileName);
+                    }
+                    FileInfo rawFile = new FileInfo(info.rawFullName);
+                    rawFile.MoveTo(destFileName);
                 }
-                FileInfo rawFile = new FileInfo(info.rawFullName);
-                rawFile.MoveTo(destFileName);
 
                 result = true;
 

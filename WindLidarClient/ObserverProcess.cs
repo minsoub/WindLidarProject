@@ -398,11 +398,12 @@ namespace WindLidarClient
                         dataProcess.setNetworkInfo(m_stCode, m_stHost, m_stPort, m_cstLocalPort, m_st_rcv_port, m_ft_rcv_port, -1);
 
                         // 전송할 파일이 있는지 체크한다.
-                        bool sts = dataProcess.HasWritePermissionOnDir(m_sourcePath);
+                        bool sCheck = dataProcess.HasWritePermissionOnDir(m_sourcePath);
 
-                        if (sts == true)
+                        // 전송한 파일이 있다면..
+                        if (sCheck == true)
                         {
-                            log("[ fileCheckProcess ] sts == true ");
+                            log("[ fileCheckProcess ] status == true ");
                             Console.WriteLine("[ fileCheckProcess ] Write enabled....");
                             int fntCnt = 0;
                             fntCnt = dataProcess.getSendFileCount();
