@@ -107,6 +107,7 @@ namespace WindLidarClient
           */
         public bool StaHasWritePermissionOnDir(string path)
         {
+            int found = 0;
             clear();
             DateTime testDt = DateTime.Today;
             string year = DateTime.Today.ToString("yyyy");
@@ -164,6 +165,7 @@ namespace WindLidarClient
             string fileEndDt = "";
             string fileStDt = "";
             int hour = 0;
+            int min = 0;
             // STA 파일만 검색
             FileInfo[] fileArray = dir.GetFiles("*.sta");
             // 날짜순대로 정렬 => 파일명으로 정렬
@@ -230,13 +232,36 @@ namespace WindLidarClient
 
                                         string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
                                         int sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
+                                        int sMin = System.Convert.ToInt32(fileTmpDt.Substring(14, 2));
                                         //Console.WriteLine("hour : [" + sHour + "] : " + line);
-                                        if (hour != sHour) break;
+                                        if (hour != sHour)
+                                        {
+                                            int sss = sHour - 1;
+                                            if (hour == 23 && sHour == 0 && sMin == 0)      // 24시 마지막
+                                            {
+                                                // job
+                                                found = 1;
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine("sss : " + sss + ", sMin : " + sMin);
+                                                if (hour == sss && sMin == 0)
+                                                {
+                                                    found = 1;
+                                                }
+                                                else
+                                                {
+                                                    found = 0;
+                                                    break;
+                                                }
+                                            }
+                                        }
 
                                         body.Add(line);
                                         readCount++;
                                         tmpInfo.readIndex++;
                                         fileEndDt = fileTmpDt;
+                                        if (found == 1) break;
                                     }
                                     else
                                     {
@@ -271,23 +296,53 @@ namespace WindLidarClient
                                         {
                                             fileStDt = line.Substring(0, 19);
                                             hour = System.Convert.ToInt32(fileStDt.Substring(11, 2));
+                                            min = System.Convert.ToInt32(fileStDt.Substring(14, 2));
+                                            
                                         }
                                         string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
                                         int sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
+                                        int sMin = System.Convert.ToInt32(fileTmpDt.Substring(14, 2));
+
+                                        Console.WriteLine("abcde.....................");
                                         if (hour != sHour)
                                         {
-                                            break;
+                                            int sss = sHour - 1;
+                                            if (hour == 23 && sHour == 0 && sMin == 0)      // 24시 마지막
+                                            {
+                                                // job
+                                                found = 1;
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine("sss : " + sss + ", sMin : " + sMin);
+                                                if (hour == sss && sMin == 0)
+                                                {
+                                                    found = 1;
+                                                }
+                                                else
+                                                {
+                                                    found = 0;
+                                                    break;
+                                                }
+                                            }
                                         }
                                         body.Add(line);
                                         readCount++;
                                         tmpInfo.readIndex++;
                                         fileEndDt = fileTmpDt;
+                                        if (found == 1) break;
                                         //}
                                     }
                                 }
                                 idx++;
                             }  // while loop end
 
+                            if (found == 0)
+                            {
+                                // 1시간 데이터를 채우지 못해서 전송하면 안된다.
+                                readCount = 0;
+                                body.Clear();
+                            }
 
                             if (body.Count > 0)
                             {
