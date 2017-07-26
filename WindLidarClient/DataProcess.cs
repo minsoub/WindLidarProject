@@ -245,7 +245,7 @@ namespace WindLidarClient
                                             else
                                             {
                                                 Console.WriteLine("sss : " + sss + ", sMin : " + sMin);
-                                                if (hour == sss && sMin == 0)
+                                                if ( hour == sss && sMin == 0)
                                                 {
                                                     found = 1;
                                                 }
@@ -279,15 +279,28 @@ namespace WindLidarClient
                                         {
                                             continue;       // next read
                                         }
+
+                                        string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
+                                        int sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
+                                        int sMin = System.Convert.ToInt32(fileTmpDt.Substring(14, 2));
+
+
                                         // 현재 읽은 날짜가 지금 시간대면 읽지 않는다.
                                         string dtString2 = line.Substring(0, 13);  // yyyy-MM-dd HH
                                         string dt3 = DateTime.Now.ToString("yyyy-MM-dd HH");
                                         log("[STA] " + dtString2 + " : " + dt3);
                                         if (dtString2 == dt3)
                                         {
-                                            log("[STA] 현재 시간대의 데이터로 관측 데이터 생성중입니다........");
-                                            
-                                            continue;
+                                            if (( sHour == 0 && sMin == 0 ) && hour == 23)
+                                            {
+                                                // job
+                                            }
+                                            else
+                                            {
+                                                log("[STA] 현재 시간대의 데이터로 관측 데이터 생성중입니다........");
+
+                                                continue;
+                                            }
                                         }
 
                                         log("[STA] " + tmpInfo.endTime + ", " + dtString1);
@@ -296,13 +309,9 @@ namespace WindLidarClient
                                         {
                                             fileStDt = line.Substring(0, 19);
                                             hour = System.Convert.ToInt32(fileStDt.Substring(11, 2));
-                                            min = System.Convert.ToInt32(fileStDt.Substring(14, 2));
-                                            
+                                            min = System.Convert.ToInt32(fileStDt.Substring(14, 2));                                            
                                         }
-                                        string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
-                                        int sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
-                                        int sMin = System.Convert.ToInt32(fileTmpDt.Substring(14, 2));
-
+                                        
                                         Console.WriteLine("abcde.....................");
                                         if (hour != sHour)
                                         {
