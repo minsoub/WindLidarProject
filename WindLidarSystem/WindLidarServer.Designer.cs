@@ -1020,6 +1020,7 @@
             this.Name = "WindLidarServer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Wind Lidar System (자료 전송 프로그램)";
+            this.Load += new System.EventHandler(this.WindLidarServer_Load);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.WindLidarServer_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.WindLidarServer_MouseMove);
             this.groupBox1.ResumeLayout(false);

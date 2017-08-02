@@ -91,6 +91,10 @@ namespace WindLidarSystem
                     }
                     else
                     {
+
+                        log.Log("start File start...");
+                        log.Log("arrMsg.Length : " + arrMsg.Length);
+
                         if (arrMsg.Length == 16)        // start message
                         {
                             string st_time = "";
@@ -152,6 +156,7 @@ namespace WindLidarSystem
                                 }
                                 oCmd = new MySqlCommand(sql, conn);
                                 oCmd.ExecuteNonQuery();
+                                //log.Log(sql);
 
                                 try
                                 {
@@ -241,6 +246,7 @@ namespace WindLidarSystem
                         );
 
                         logMsg(sql);
+                        //log.Log(sql);
                         oCmd = new MySqlCommand(sql, conn);
                         oCmd.ExecuteNonQuery();
 
@@ -305,6 +311,7 @@ namespace WindLidarSystem
                             udpOkStaSend(arrMsg[1], arrMsg[2], client_ip);
 
                             logMsg(sql);
+                           // log.Log(sql);
                         }
                         else
                         {

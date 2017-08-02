@@ -778,5 +778,10 @@ namespace WindLidarSystem
             Application.Exit();
         }
 
+        private void WindLidarServer_Load(object sender, EventArgs e)
+        {
+            btnStart.PerformClick();
+        }
+
     }
 }

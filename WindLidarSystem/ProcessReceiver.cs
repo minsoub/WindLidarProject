@@ -185,12 +185,12 @@ namespace WindLidarSystem
                     }
                     if (found == 0)
                     {
-                        staHandle.WaitOne(1000 * System.Convert.ToInt16(ParamInitInfo.Instance.m_staThreadTime));       // 10 min
+                        staHandle.WaitOne(1000 * System.Convert.ToInt16(ParamInitInfo.Instance.m_staThreadTime));       // 1 min
                     }
                     else
                     {
                         // 처리할 데이터가 있을 수 있다. 
-                        staHandle.WaitOne(1000 * 10);    // 10 seconds
+                        staHandle.WaitOne(1000 * 8);    // 10 seconds
                     }
                     
                 }
@@ -250,7 +250,7 @@ namespace WindLidarSystem
                     }
                     else
                     {
-                        waitHandle.WaitOne(1000 * 10);   // 10 seconds
+                        waitHandle.WaitOne(1000 * 2);   // 10 seconds
                     }
                 }
             }
