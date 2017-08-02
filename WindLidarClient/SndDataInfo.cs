@@ -35,6 +35,7 @@ namespace WindLidarClient
             public string rtdFile;
             public string rtdFullName;
             public int fileCnt;
+            public int found;
         }
 
         public SndDataInfo()
@@ -51,6 +52,7 @@ namespace WindLidarClient
             fileCount = 0;
             sendCount = 0;
             type = "";
+
         }
     }
 }
