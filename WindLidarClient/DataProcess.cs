@@ -712,7 +712,7 @@ namespace WindLidarClient
                     Console.WriteLine("File data(STA) send msg : " + msg);
                     main.setMsg("STA send start :" + m_stHost + "[" + stPort + "])" + msg);
 
-                    c.Client.ReceiveTimeout = 2000;     // 2 second
+                    c.Client.ReceiveTimeout = 5000;     // 5 second
                     IPEndPoint ipepLocal = new IPEndPoint(IPAddress.Any, m_at_rcv_port+5);     // 10001 + 2
                     EndPoint remote = (EndPoint)ipepLocal;
 
@@ -823,7 +823,7 @@ namespace WindLidarClient
                    // Console.WriteLine("File data send msg : " + msg);
                     main.setMsg("File data send start (startStatusSendData :" + m_stHost + "[" + stPort + "])" + msg);
 
-                    c.Client.ReceiveTimeout = 2000;     // 2 second
+                    c.Client.ReceiveTimeout = 5000;     // 2 second
                     IPEndPoint ipepLocal = new IPEndPoint(IPAddress.Any, m_ft_rcv_port+5);     // 10001 + 2
                     EndPoint remote = (EndPoint)ipepLocal;
 
@@ -941,7 +941,7 @@ namespace WindLidarClient
                     main.setMsg("End Snd Msg (" + m_stHost + "[" + stPort + "])" + msg);
                     //fsLog.Log("File data send end (startStatusSendData :" + m_stHost + "[" + stPort + "])" + msg);
 
-                    c.Client.ReceiveTimeout = 2000;     // 2 second
+                    c.Client.ReceiveTimeout = 5000;     // 2 second
                     IPEndPoint ipepLocal = new IPEndPoint(IPAddress.Any, rcvPort+5);     // 10001 + 2
                     EndPoint remote = (EndPoint)ipepLocal;
 
