@@ -172,6 +172,9 @@ namespace WindLidarClient
         public void abort()
         {
             isShutdown = true;
+
+            Thread.Sleep(1000 * 3);     // 3 second 
+
             if (stsThread != null) stsThread.Abort();
 
             if (almThread != null) almThread.Abort();
@@ -311,18 +314,22 @@ namespace WindLidarClient
                                             log("[STA] file move ok.");
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
+                                            //
                                             if (ok == true)
-                                            {                                                
-                                                //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
-                                                double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
-
-                                                Console.WriteLine("s1 : " + span + " > 60 * 10 => true[old data]...??? [" + DateTime.Now + ", " + dataProcess.getCheckDate() + "]");
-                                                if (span > (60 * 10))        // 읽은 데이터가 현재보다 10분 이전 데이터이면 오래된 데이터이므로
+                                            {
+                                                dataProcess.tmpSave(m_sourcePath);
+                                                DateTime sd = dataProcess.getCheckDate().AddMinutes(10);  // + 10 minute
+                                                if (sd < DateTime.Now)
                                                 {
-                                                     log("old data found................");
-                                                     old_data = true;
+                                                    old_data = true;
                                                 }
- 
+
+                                                //double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
+                                                //if (span > (60 * 20))        // 읽은 데이터가 현재보다 20분 이전 데이터이면 오래된 데이터이므로
+                                                //{
+                                                //    old_data = true;
+
+
                                             }
                                             else
                                             {
@@ -429,18 +436,20 @@ namespace WindLidarClient
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
                                             //dataProcess.tmpSave(m_sourcePath);
-                                            
-                                            DateTime sd = dataProcess.getCheckDate().AddMinutes(10);  // + 10 minute
-                                            if (sd < DateTime.Now)
+                                            if (ok == true)
                                             {
-                                                old_data = true;
-                                            }
+                                                DateTime sd = dataProcess.getCheckDate().AddMinutes(10);  // + 10 minute
+                                                if (sd < DateTime.Now)
+                                                {
+                                                    old_data = true;
+                                                }
 
-                                            //double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
-                                            //if (span > (60 * 20))        // 읽은 데이터가 현재보다 20분 이전 데이터이면 오래된 데이터이므로
-                                            //{
-                                            //    old_data = true;
-                                            //}
+                                                //double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
+                                                //if (span > (60 * 20))        // 읽은 데이터가 현재보다 20분 이전 데이터이면 오래된 데이터이므로
+                                                //{
+                                                //    old_data = true;
+                                                //}
+                                            }
                                         }
                                         else
                                         {

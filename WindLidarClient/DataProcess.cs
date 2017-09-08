@@ -125,323 +125,333 @@ namespace WindLidarClient
             DateTime endDt;
             string laststring = null;
             //log("1");
-            // 과거 데이터를 보낼 수 있으니 달의 시작점을 찾아야 한다.
-            foreach (string m in monList)
+            try
             {
-                dataPath = Path.Combine(path, year, m);
-                dataPath = Path.Combine(dataPath, m_data1, m_data2);  // 월 데이터 체크
-
-                // 디렉토리 내에 파일이 존재하는지 체크한다.
-                if (Directory.Exists(dataPath) == true)        // 현재달의 관측데이터가 있는지 체크한다.
+                // 아래 로직은 프로그램이 시작 될 때 과거 데이터를 보내기 위해서 월의 시작점을 찾기 위한 로직이다.
+                // 과거의 월의 디렉토리를 찾아서 관측 데이터가 있는지 체크해서 있으면 그 달의 시작점으로 해서
+                // 데이터를 전송할 수 있도록 한다. 
+                foreach (string m in monList)
                 {
-                    // 데이터가 존재하는지 체크한다.
-                    DirectoryInfo checkDir = new DirectoryInfo(dataPath);
-                    FileInfo[] fileCheck = checkDir.GetFiles("*.sta");
+                    dataPath = Path.Combine(path, year, m);
+                    dataPath = Path.Combine(dataPath, m_data1, m_data2);  // 월 데이터 체크
 
-                    if (fileCheck.Count() > 0)
+                    // 디렉토리 내에 파일이 존재하는지 체크한다.
+                    if (Directory.Exists(dataPath) == true)        // 현재달의 관측데이터가 있는지 체크한다.
                     {
-                        found = 1;
-                        mon = m;
-                        break;
-                    }
-                }
-            }
-            //log("2");
-            if (found == 0)
-            {
-                log("[STA] no found file");
-                Console.WriteLine("no found file............");
-                return false;
-            }
-            found = 0;
+                        // 데이터가 존재하는지 체크한다.
+                        DirectoryInfo checkDir = new DirectoryInfo(dataPath);
+                        FileInfo[] fileCheck = checkDir.GetFiles("*.sta");
 
-            // _sendTmp.dat 파일을 읽어들인다.
-            string tmpFile = Path.Combine(path, "_sendTmp.dat");
-            if (File.Exists(tmpFile))
-            {
-                using (StreamReader sr = File.OpenText(tmpFile))
-                {
-                    string line = sr.ReadLine();
-                    string[] arr = line.Split(arrSeparator);
-                    laststring = arr[arr.Length - 1];
-                }
-            }
-           // log("3");
-            // snd 파일이 있는지 체크하고 있으면 1시간 데이터가 채워졌는지 체크한다.
-            // 1시간 데이터가 채워지지 않았다면 10분 데이터(한줄)를 STA로 읽어서 넣는다
-            DirectoryInfo sndCheckdir = new DirectoryInfo(dataPath);
-            FileInfo[] sndCheckInfo = sndCheckdir.GetFiles("*.snd");
-            if (sndCheckInfo.Count() == 0)  // snd 파일이 없다 => first read
-            {
-                // first read
-                firstRead = true;
-            }
-            else
-            {
-                sndFile = sndCheckInfo[0].FullName;
-                if (File.Exists(sndFile))
-                {
-                    using (StreamReader sr = File.OpenText(sndFile))
-                    {
-                        string line = "";
-                        while ((line = sr.ReadLine()) != null) 
-                            lindDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
-                    }
-                }
-                sndFile = sndCheckInfo[0].Name;
-            }
-
-            //log("4");
-            DirectoryInfo dir = new DirectoryInfo(dataPath);
-            int cnt = 0;
-            sendInfo.path = dataPath;
-            string fileEndDt = "";
-            string fileStDt = "";
-            int hour = 0;
-            // STA 파일만 검색
-            FileInfo[] fileArray = dir.GetFiles("*.sta");
-            // 날짜순대로 정렬 => 파일명으로 정렬
-            for (int i = 0; i < fileArray.Length - 1; i++)
-            {
-                for (int j=0; j<fileArray.Length-1-i; j++)
-                {
-                    FileInfo a = fileArray[j];
-                    FileInfo b = fileArray[j+1];
-
-                    DateTime at = convertTimeExtract(a.Name, mon);
-                    DateTime bt = convertTimeExtract(b.Name, mon);
-                    
-                    if (at > bt) // fileArray[j] > fileArray[j+1])
-                    {
-                        FileInfo temp = fileArray[j];
-                        fileArray[j] = fileArray[j + 1];
-                        fileArray[j] = temp;
-                    }
-                }
-            }
-            //log("5");
-            foreach (FileInfo fi in fileArray)
-            {
-                string file = fi.FullName;
-                string ext = Path.GetExtension(file);
-
-                if (ext == ".sta")
-                {
-                    Console.WriteLine("[StaHasWritePermissionOnDir] " + file);
-                    if (FileLocked(file) == false)     // if File not lock
-                    {
-                        List<string> body = new List<string>();
-                        body.Clear();
-
-                        using (StreamReader sr = new StreamReader(file))
+                        if (fileCheck.Count() > 0)
                         {
-                            string line;
-                            string head = "";
+                            found = 1;
+                            mon = m;
+                            break;
+                        }
+                    }
+                }
+                //log("2");
+                if (found == 0)
+                {
+                    log("[STA] no found file");
+                    Console.WriteLine("no found file............");
+                    return false;
+                }
+                found = 0;
 
-                            int idx = 0;
-                            int readCount = 0;
+                // _sendTmp.dat 파일을 읽어들인다.
+                string tmpFile = Path.Combine(path, "_sendTmp.dat");
+                if (File.Exists(tmpFile))
+                {
+                    using (StreamReader sr = File.OpenText(tmpFile))
+                    {
+                        string line = sr.ReadLine();
+                        string[] arr = line.Split(arrSeparator);
+                        laststring = arr[arr.Length - 1];
+                    }
+                }
+                // log("3");
+                // snd 파일이 있는지 체크하고 있으면 1시간 데이터가 채워졌는지 체크한다.
+                // 1시간 데이터가 채워지지 않았다면 10분 데이터(한줄)를 STA로 읽어서 넣는다
+                DirectoryInfo sndCheckdir = new DirectoryInfo(dataPath);
+                FileInfo[] sndCheckInfo = sndCheckdir.GetFiles("*.snd");
+                if (sndCheckInfo.Count() == 0)  // snd 파일이 없다 => first read
+                {
+                    // first read
+                    firstRead = true;
+                }
+                else
+                {
+                    sndFile = sndCheckInfo[0].FullName;
+                    if (File.Exists(sndFile))
+                    {
+                        using (StreamReader sr = File.OpenText(sndFile))
+                        {
+                            string line = "";
                             while ((line = sr.ReadLine()) != null)
+                                lindDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
+                        }
+                    }
+                    sndFile = sndCheckInfo[0].Name;
+                }
+
+                //log("4");
+                DirectoryInfo dir = new DirectoryInfo(dataPath);
+                int cnt = 0;
+                sendInfo.path = dataPath;
+                string fileEndDt = "";
+                string fileStDt = "";
+                int hour = 0;
+                // STA 파일만 검색
+                FileInfo[] fileArray = dir.GetFiles("*.sta");
+                // 날짜순대로 정렬 => 파일명으로 정렬
+                for (int i = 0; i < fileArray.Length - 1; i++)
+                {
+                    for (int j = 0; j < fileArray.Length - 1 - i; j++)
+                    {
+                        FileInfo a = fileArray[j];
+                        FileInfo b = fileArray[j + 1];
+
+                        DateTime at = convertTimeExtract(a.Name, mon);
+                        DateTime bt = convertTimeExtract(b.Name, mon);
+
+                        if (at > bt) // fileArray[j] > fileArray[j+1])
+                        {
+                            FileInfo temp = fileArray[j];
+                            fileArray[j] = fileArray[j + 1];
+                            fileArray[j] = temp;
+                        }
+                    }
+                }
+                //log("5");
+                foreach (FileInfo fi in fileArray)
+                {
+                    string file = fi.FullName;
+                    string ext = Path.GetExtension(file);
+
+                    if (ext == ".sta")
+                    {
+                        Console.WriteLine("[StaHasWritePermissionOnDir] " + file);
+                        if (FileLocked(file) == false)     // if File not lock
+                        {
+                            List<string> body = new List<string>();
+                            body.Clear();
+
+                            using (StreamReader sr = new StreamReader(file))
                             {
-                                // head read
-                                if (idx == 0)
+                                string line;
+                                string head = "";
+
+                                int idx = 0;
+                                int readCount = 0;
+                                while ((line = sr.ReadLine()) != null)
                                 {
-                                    head = line;
-                                    if (firstRead == true) tmpInfo.readIndex++;
-                                }
-                                else
-                                {
-                                    if (firstRead == true)        // first read
+                                    // head read
+                                    if (idx == 0)
                                     {
-                                        log("[STA] fristRead == true");
-                                        int sHour = 0;
-                                        int sMin = 0;
-                                        if (laststring != null)
+                                        head = line;
+                                        if (firstRead == true) tmpInfo.readIndex++;
+                                    }
+                                    else
+                                    {
+                                        if (firstRead == true)        // first read
                                         {
+                                            log("[STA] fristRead == true");
+                                            int sHour = 0;
+                                            int sMin = 0;
+                                            if (laststring != null)    // laststring => _sendTmp.dat
+                                            {
+                                                string dtString1 = line.Substring(0, 19);
+                                                DateTime dt1 = DateTime.ParseExact(dtString1, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                                                DateTime testDt = DateTime.ParseExact(laststring, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+
+                                                var diffInSeconds = (testDt - dt1).TotalSeconds;
+
+                                                // 읽은 날짜가 이전에 읽은 날짜보다 커야 한다.
+                                                if (diffInSeconds >= 0)       // dt1 : 현재 읽은 날짜가 과거
+                                                {
+                                                    continue;       // next read
+                                                }
+                                            }
+
+                                            if (readCount == 0)
+                                            {
+                                                fileStDt = line.Substring(0, 19);
+                                                hour = System.Convert.ToInt32(fileStDt.Substring(11, 2));
+                                            }
+                                            string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
+
+                                            sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
+                                            sMin = System.Convert.ToInt32(fileTmpDt.Substring(14, 2));
+
+                                            if (sMin == 0) // last time (매 1시간)
+                                            {
+                                                if (sHour == 0)     // 24 시
+                                                {
+                                                    found = 2;
+                                                }
+                                                found = 1;
+                                            }
+                                            if (sMin != 0)
+                                            {
+                                                DateTime dt1 = DateTime.ParseExact(fileTmpDt, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                                                dt1 = dt1.AddHours(1);  // 1 hour
+                                                String tm1 = dt1.ToString("yyyy-MM-dd HH:mm:ss");
+                                                sndFile = tm1.Substring(8, 2) + "_" + tm1.Substring(11, 2) + "_00_00.snd";
+                                            }
+                                            else
+                                            {
+                                                sndFile = fileTmpDt.Substring(8, 2) + "_" + fileTmpDt.Substring(11, 2) + "_00_00.snd";
+                                            }
+
+                                            body.Add(line);
+                                            readCount++;
+                                            tmpInfo.readIndex++;
+                                            fileEndDt = fileTmpDt;
+
+                                            break;
+                                        }
+                                        else
+                                        {
+
                                             string dtString1 = line.Substring(0, 19);
                                             DateTime dt1 = DateTime.ParseExact(dtString1, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                                            DateTime testDt = DateTime.ParseExact(laststring, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                                            DateTime testDt = DateTime.ParseExact(lindDt, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
                                             var diffInSeconds = (testDt - dt1).TotalSeconds;
 
-                                            // 읽은 날짜가 이전에 읽은 날짜보다 커야 한다.
+                                            // 현재 읽은 라인의 날짜가 이전에 읽은 날짜보다 커야 한다.
                                             if (diffInSeconds >= 0)       // dt1 : 현재 읽은 날짜가 과거
                                             {
                                                 continue;       // next read
                                             }
-                                        }
+                                            int sHour = System.Convert.ToInt32(dtString1.Substring(11, 2));
+                                            int sMin = System.Convert.ToInt32(dtString1.Substring(14, 2));
 
-                                        if (readCount == 0)
-                                        {
-                                            fileStDt = line.Substring(0, 19);
-                                            hour = System.Convert.ToInt32(fileStDt.Substring(11, 2));
-                                        }
-                                        string fileTmpDt = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
-                                        
-                                        sHour = System.Convert.ToInt32(fileTmpDt.Substring(11, 2));
-                                        sMin = System.Convert.ToInt32(fileTmpDt.Substring(14, 2));
-
-                                        if (sMin == 0) // last time (매 1시간)
-                                        {
-                                            if (sHour == 0)     // 24 시
+                                            if (sMin == 0) // last time (매 1시간)
                                             {
-                                                found = 2;
+                                                if (sHour == 0)     // 24 시
+                                                {
+                                                    found = 2;
+                                                }
+                                                found = 1;
                                             }
-                                            found = 1;
-                                        }
-                                        if (sMin != 0)
-                                        {
-                                            DateTime dt1 = DateTime.ParseExact(fileTmpDt, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                                            dt1 = dt1.AddHours(1);  // 1 hour
-                                            String tm1 = dt1.ToString("yyyy-MM-dd HH:mm:ss");
-                                            sndFile = tm1.Substring(8, 2) + "_" + tm1.Substring(11, 2) + "_00_00.snd";
-                                        }
-                                        else
-                                        {
-                                            sndFile = fileTmpDt.Substring(8, 2) + "_" + fileTmpDt.Substring(11, 2) + "_00_00.snd";
-                                        }
 
-                                        body.Add(line);
-                                        readCount++;
-                                        tmpInfo.readIndex++;
-                                        fileEndDt = fileTmpDt;
+                                            body.Add(line);
+                                            readCount++;
+                                            tmpInfo.readIndex++;
+                                            fileEndDt = dtString1;
+                                            break;
+                                        }
+                                    }
+                                    idx++;
+                                }  // while loop end
 
-                                        break;
+                                //if (found == 0)
+                                //{
+                                //    // 1시간 데이터를 채우지 못해서 전송하면 안된다.
+                                //    readCount = 0;
+                                //    body.Clear();
+                                //}
+
+                                if (body.Count > 0)
+                                {
+                                    string staSaveName = sndFile;
+
+                                    String saveName = Path.Combine(dataPath, staSaveName);
+                                    tmpInfo.fullFileName = saveName;
+                                    tmpInfo.fileName = sndFile;
+
+                                    string sdt1 = year + "-" + mon + "-" + staSaveName.Substring(0, 2) + " " + staSaveName.Substring(3, 2) + ":00:00";
+
+
+                                    startDt = DateTime.ParseExact(sdt1, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                                    endDt = startDt;
+                                    startDt = startDt.AddHours(-1);
+
+                                    tmpInfo.startTime = startDt.ToString("yyyy-MM-dd HH:mm:ss");
+                                    tmpInfo.endTime = endDt.ToString("yyyy-MM-dd HH:mm:ss");
+                                    tmpInfo.lastTime = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
+                                    Console.WriteLine("staSaveName : " + saveName);
+                                    // debug
+                                    log("[STA] Save name : " + saveName);
+
+                                    // sta file create
+                                    // 존재하면 append
+                                    if (File.Exists(saveName))
+                                    {
+                                        using (StreamWriter sw = File.AppendText(saveName))
+                                        {
+                                            foreach (string bodyLine in body)
+                                            {
+                                                sw.WriteLine(bodyLine);
+                                            }
+                                        }
                                     }
                                     else
                                     {
-
-                                        string dtString1 = line.Substring(0, 19);
-                                        DateTime dt1    = DateTime.ParseExact(dtString1, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                                        DateTime testDt = DateTime.ParseExact(lindDt, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-
-                                        var diffInSeconds = (testDt - dt1).TotalSeconds;
-
-                                        // 현재 읽은 라인의 날짜가 이전에 읽은 날짜보다 커야 한다.
-                                        if (diffInSeconds >= 0)       // dt1 : 현재 읽은 날짜가 과거
+                                        using (StreamWriter sw = File.CreateText(saveName))
                                         {
-                                            continue;       // next read
-                                        }
-                                        int sHour = System.Convert.ToInt32(dtString1.Substring(11, 2));
-                                        int sMin = System.Convert.ToInt32(dtString1.Substring(14, 2));
-
-                                        if (sMin == 0) // last time (매 1시간)
-                                        {
-                                            if (sHour == 0)     // 24 시
+                                            sw.WriteLine(head);
+                                            foreach (string bodyLine in body)
                                             {
-                                                found = 2;
+                                                sw.WriteLine(bodyLine);
                                             }
-                                            found = 1;
                                         }
-
-                                        body.Add(line);
-                                        readCount++;
-                                        tmpInfo.readIndex++;
-                                        fileEndDt = dtString1;
-                                        break;
                                     }
+                                    cnt = 1;
                                 }
-                                idx++;
-                            }  // while loop end
+                            }  // using end
 
-                            //if (found == 0)
-                            //{
-                            //    // 1시간 데이터를 채우지 못해서 전송하면 안된다.
-                            //    readCount = 0;
-                            //    body.Clear();
-                            //}
-
-                            if (body.Count > 0)
+                            if (body.Count == 0)
                             {
-                                string staSaveName = sndFile;
-                                                               
-                                String saveName = Path.Combine(dataPath, staSaveName);
-                                tmpInfo.fullFileName = saveName;
-                                tmpInfo.fileName = sndFile;
-
-                                string sdt1 = year + "-" + mon + "-" + staSaveName.Substring(0, 2) + " " + staSaveName.Substring(3, 2) + ":00:00";
-
-
-                                startDt = DateTime.ParseExact(sdt1, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                                endDt = startDt;
-                                startDt = startDt.AddHours(-1);
-
-                                tmpInfo.startTime = startDt.ToString("yyyy-MM-dd HH:mm:ss");
-                                tmpInfo.endTime = endDt.ToString("yyyy-MM-dd HH:mm:ss");
-                                tmpInfo.lastTime = line.Substring(0, 19);  // 2017-05-18 20:00:00 (start date)
-                                Console.WriteLine("staSaveName : " + saveName);
-                                // debug
-                                log("[STA] Save name : " + saveName);
-
-                                // sta file create
-                                // 존재하면 append
-                                if (File.Exists(saveName))
+                                // 파일의 끝
+                                tmpInfo.readIndex = 0;
+                                // sta file move
+                                log("[STA] end file : " + file);
+                                string t = fi.Name.Substring(0, 2);    // day
+                                int tt = DateTime.Today.Day;
+                                if (tt != Convert.ToInt32(t))       // 이전 데이터로 모두 읽은 데이터이므로 이동
                                 {
-                                    using (StreamWriter sw = File.AppendText(saveName))
-                                    {
-                                        foreach (string bodyLine in body)
-                                        {
-                                            sw.WriteLine(bodyLine);
-                                        }
-                                    }
+                                    log("[STA] 전송완료된 데이터로서 백업이동");
+                                    FileMoveProcess(file);
                                 }
                                 else
                                 {
-                                    using (StreamWriter sw = File.CreateText(saveName))
-                                    {
-                                        sw.WriteLine(head);
-                                        foreach (string bodyLine in body)
-                                        {
-                                            sw.WriteLine(bodyLine);
-                                        }
-                                    }
+                                    log("[STA] 관측데이터 수신중.......");
                                 }
-                                cnt = 1;
+                                continue;       // next sta
                             }
-                        }  // using end
-
-                        if (body.Count == 0)
-                        {
-                            // 파일의 끝
-                            tmpInfo.readIndex = 0;
-                            // sta file move
-                            log("[STA] end file : " + file);
-                            string t = fi.Name.Substring(0, 2);    // day
-                            int tt = DateTime.Today.Day;
-                            if (tt != Convert.ToInt32(t))       // 이전 데이터로 모두 읽은 데이터이므로 이동
-                            {
-                                log("[STA] 전송완료된 데이터로서 백업이동");
-                                FileMoveProcess(file);
-                            }else
-                            {
-                                log("[STA] 관측데이터 수신중.......");
-                            }
-                            continue;       // next sta
                         }
+
+                        break;   // sta 파일 하나 읽으면 루프 종료.
                     }
-
-                    break;   // sta 파일 하나 읽으면 루프 종료.
+                }  // foreach end
+                if (cnt == 0)
+                {
+                    log("Upload data does not exists");
+                    return false;
                 }
-            }  // foreach end
-            if (cnt == 0)
+                // log("6");
+                // snd(std)  파일 전송
+                //DateTime sDt = DateTime.ParseExact(tmpInfo.startTime, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                DateTime eDt = DateTime.ParseExact(tmpInfo.endTime, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                SndDataInfo.sFileInfo sf = new SndDataInfo.sFileInfo();
+                sf.fileName = tmpInfo.fileName;
+                sf.fullFileName = tmpInfo.fullFileName;
+                sf.startTime = tmpInfo.startTime;
+                sf.endTime = tmpInfo.endTime;
+                sf.found = found;
+
+                sendInfo.fileCount++;
+                sendInfo.lstInfo.Add(sf);
+                m_chkDate = eDt;
+            }catch(Exception ex)
             {
-                log("Upload data does not exists");
+                log("StaHasWritePermissionOnDir Exception error : " + ex.ToString());
                 return false;
+
             }
-           // log("6");
-            // snd(std)  파일 전송
-            //DateTime sDt = DateTime.ParseExact(tmpInfo.startTime, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-            DateTime eDt = DateTime.ParseExact(tmpInfo.endTime, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-            SndDataInfo.sFileInfo sf = new SndDataInfo.sFileInfo();
-            sf.fileName = tmpInfo.fileName;
-            sf.fullFileName = tmpInfo.fullFileName;
-            sf.startTime = tmpInfo.startTime;
-            sf.endTime = tmpInfo.endTime;
-            sf.found = found;
-
-            sendInfo.fileCount++;
-            sendInfo.lstInfo.Add(sf);
-            m_chkDate = eDt;
-
             return true;
         }
 
