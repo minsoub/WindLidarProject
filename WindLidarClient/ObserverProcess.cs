@@ -310,14 +310,23 @@ namespace WindLidarClient
                                         {
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
-                                            dataProcess.tmpSave(m_sourcePath);
-                                            //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
-                                            double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
 
-                                            Console.WriteLine("s1 : " + span + " > 60 * 60 => true[old data]...??? [" + DateTime.Now+", "+ dataProcess.getCheckDate() + "]");
-                                            if (span > (60 * 60))        // 읽은 데이터가 현재보다 60분 이전 데이터이면 오래된 데이터이므로
+                                            if (ok == true)
                                             {
-                                                log("old data found................");
+                                                dataProcess.tmpSave(m_sourcePath);
+                                                //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
+                                                double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
+
+                                                Console.WriteLine("s1 : " + span + " > 60 * 60 => true[old data]...??? [" + DateTime.Now + ", " + dataProcess.getCheckDate() + "]");
+                                                if (span > (60 * 60))        // 읽은 데이터가 현재보다 60분 이전 데이터이면 오래된 데이터이므로
+                                                {
+                                                    log("old data found................");
+                                                    old_data = true;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                fsLog.Log("[StaCheckProcess] 자료 처리 완료 수신 못함");
                                                 old_data = true;
                                             }
                                         }
@@ -325,12 +334,14 @@ namespace WindLidarClient
                                         {
                                             log("[ StaCheckProcess ] File Move fail....");
                                             fsLog.Log("[ StaCheckProcess ] File Move fail....");
+                                            old_data = true;
                                         }
                                     }
                                     else
                                     {
                                         log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
                                         fsLog.Log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
+                                        old_data = true;
                                     }
                                 }
                             }
