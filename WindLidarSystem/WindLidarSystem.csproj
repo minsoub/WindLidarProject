@@ -162,6 +162,48 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_-.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_off.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_on.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start_sm.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop_sm.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\title.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start_sm_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop_sm_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ridar2.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

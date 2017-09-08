@@ -203,11 +203,11 @@ namespace WindLidarClient
                         using (UdpClient c = new UdpClient(m_cstLocalPort))  // source port
                         {
                             c.Send(buf, buf.Length, m_stHost, stPort);
-                            log("[ StatusSender ] " + msg);
+                            // log("[ StatusSender ] " + msg);
                         }
                     }catch(Exception ex)
                     {
-                        log("[ StatusSender error ] : " + ex.ToString());
+                        log("[ StatusSender error ] status send error : " + ex.ToString());
                     }
 
                     waitHandle.WaitOne(1000 * m_sts_sleep_time);  // 60 second
@@ -301,32 +301,32 @@ namespace WindLidarClient
                                 {
                                     // FTP 데이터 전송
                                     ok = dataProcess.StaftpSend(FTP_URI, m_host, m_port, m_id, m_pass);
-
+                                    log("[STA] ftp send data ok.");
                                     // 데이터 백업 처리
                                     if (ok == true)
                                     {
-                                        log("[FileMoveProcess] called....");
-                                        if (dataProcess.FileStaMoveProcess() == true)
+                                        //log("[FileMoveProcess] called....");
+                                        if (dataProcess.FileStaMoveProcess(m_sourcePath) == true)
                                         {
+                                            log("[STA] file move ok.");
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
-
                                             if (ok == true)
-                                            {
-                                                dataProcess.tmpSave(m_sourcePath);
+                                            {                                                
                                                 //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
                                                 double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
 
-                                                Console.WriteLine("s1 : " + span + " > 60 * 60 => true[old data]...??? [" + DateTime.Now + ", " + dataProcess.getCheckDate() + "]");
-                                                if (span > (60 * 60))        // 읽은 데이터가 현재보다 60분 이전 데이터이면 오래된 데이터이므로
+                                                Console.WriteLine("s1 : " + span + " > 60 * 10 => true[old data]...??? [" + DateTime.Now + ", " + dataProcess.getCheckDate() + "]");
+                                                if (span > (60 * 10))        // 읽은 데이터가 현재보다 10분 이전 데이터이면 오래된 데이터이므로
                                                 {
-                                                    log("old data found................");
-                                                    old_data = true;
+                                                     log("old data found................");
+                                                     old_data = true;
                                                 }
+ 
                                             }
                                             else
                                             {
-                                                fsLog.Log("[StaCheckProcess] 자료 처리 완료 수신 못함");
+                                                log("[STA] End msg send error.");
                                                 old_data = true;
                                             }
                                         }
@@ -334,14 +334,12 @@ namespace WindLidarClient
                                         {
                                             log("[ StaCheckProcess ] File Move fail....");
                                             fsLog.Log("[ StaCheckProcess ] File Move fail....");
-                                            old_data = true;
                                         }
                                     }
                                     else
                                     {
                                         log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
                                         fsLog.Log("FTP 데이터 전송 에러 : 로그 파일 확인 요망");
-                                        old_data = true;
                                     }
                                 }
                             }
@@ -358,11 +356,11 @@ namespace WindLidarClient
                     }
                     if (old_data == false)
                     {
-                        staHandle.WaitOne(1000 * m_sta_sleep_time);  // 1 hour  
+                        staHandle.WaitOne(1000 * m_sta_sleep_time);  // 1 hour  => 10 minute
                     }
                     else
                     {
-                        staHandle.WaitOne(1000 * 5);  // 10 second
+                        staHandle.WaitOne(1000 * 3);  // 10 second
                     }
                 }
             }
@@ -397,11 +395,12 @@ namespace WindLidarClient
                         dataProcess.setNetworkInfo(m_stCode, m_stHost, m_stPort, m_cstLocalPort, m_st_rcv_port, m_ft_rcv_port, -1);
 
                         // 전송할 파일이 있는지 체크한다.
-                        bool sts = dataProcess.HasWritePermissionOnDir(m_sourcePath);
+                        bool sCheck = dataProcess.HasWritePermissionOnDir(m_sourcePath);
 
-                        if (sts == true)
+                        // 전송한 파일이 있다면..
+                        if (sCheck == true)
                         {
-                            log("[ fileCheckProcess ] sts == true ");
+                            log("[ fileCheckProcess ] status == true ");
                             Console.WriteLine("[ fileCheckProcess ] Write enabled....");
                             int fntCnt = 0;
                             fntCnt = dataProcess.getSendFileCount();
@@ -430,12 +429,18 @@ namespace WindLidarClient
                                             // 전송 완료 메시지 전송 및 자료 처리 완료 수신
                                             ok = dataProcess.endStatusSendData();
                                             //dataProcess.tmpSave(m_sourcePath);
-                                            double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
-                                            //double s1 = (DateTime.Today - dataProcess.getCheckDate()).TotalSeconds;
-                                            if (span > (60 * 12))        // 읽은 데이터가 현재보다 12분 이전 데이터이면 오래된 데이터이므로
+                                            
+                                            DateTime sd = dataProcess.getCheckDate().AddMinutes(10);  // + 10 minute
+                                            if (sd < DateTime.Now)
                                             {
                                                 old_data = true;
                                             }
+
+                                            //double span = ((DateTime.Now).Subtract(dataProcess.getCheckDate())).TotalSeconds;
+                                            //if (span > (60 * 20))        // 읽은 데이터가 현재보다 20분 이전 데이터이면 오래된 데이터이므로
+                                            //{
+                                            //    old_data = true;
+                                            //}
                                         }
                                         else
                                         {
@@ -459,6 +464,7 @@ namespace WindLidarClient
                     }catch(Exception ex)
                     {
                         log("[ fileCheckProcess error ] : " + ex.ToString());
+                        fsLog.Log("[ fileCheckProcess error ] : " + ex.ToString());
                         old_data = true;
                     }
                     if (old_data == false)

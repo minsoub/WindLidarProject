@@ -52,7 +52,7 @@ namespace WindLidarSystem
         {
 
             // 데이터 날짜 체크
-            string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
+            string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/site" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
             if (FtpDirectoryExists(ftp_url) == false)
             {
                 log.Log("FTP Server : Directory create error......" + ftp_url);
@@ -60,11 +60,23 @@ namespace WindLidarSystem
             }
 
             // sta 파일 전송
-            string ftpPath = ftp_url + "/" + mData.staFileName;
+            // staFileName : 17_01_00_00.sta  => 13201_20170714010000.sta
+            string tmpName1 = mData.staFileName.Replace("_", "");   // => 17010000.sta
+            string ftpSaveFile1 = m_stCode + "_" + mData.m_year + mData.m_mon + mData.m_day + tmpName1.Substring(2);
+            string ftpPath = ftp_url + "/" + ftpSaveFile1;   //  mData.staFileName;
+            //ftpPath = ftp_url + "/" + mData.staFileName;
             if (sendData(ftpPath, mData.staFullFileName))
             {
                 mData.sendCount++;
             }
+
+
+            // sta 파일 전송
+           // string ftpPath = ftp_url + "/" + mData.staFileName;
+           // if (sendData(ftpPath, mData.staFullFileName))
+           // {
+           //     mData.sendCount++;
+           // }
 
             log.Log("[ FtpSend ] FTP URI : " + ftpPath);
 
@@ -78,7 +90,9 @@ namespace WindLidarSystem
         {
 
             // 데이터 날짜 체크
-            string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
+            // FDP Directory : site13206, site13211, site13210
+            string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/site" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
+            //string ftp_url = ftpUri + ftpHost + ":" + ftpPort + "/" + m_stCode + "/" + mData.m_year + "/" + mData.m_mon + "/" + mData.m_day;  // + "/" + info.s_hour;
             if (FtpDirectoryExists(ftp_url) == false)
             {
                 log.Log("FTP Server : Directory create error......" + ftp_url);
@@ -88,7 +102,11 @@ namespace WindLidarSystem
             if (mData.mode == 0)        // STA
             {
                 // sta 파일 전송
-                ftpPath = ftp_url + "/" + mData.staFileName;
+                // staFileName : 17_01_00_00.sta  => site13201_20170714_010000.sta
+                string tmpName1 = mData.staFileName.Replace("_", "");   // => 17010000.sta
+                string ftpSaveFile1 =  m_stCode + "_" + mData.m_year + mData.m_mon + mData.m_day+ tmpName1.Substring(2);
+                ftpPath = ftp_url + "/" + ftpSaveFile1;   //  mData.staFileName;
+                //ftpPath = ftp_url + "/" + mData.staFileName;
                 if (sendData(ftpPath, mData.staFullFileName))
                 {
                     mData.sendCount++;
@@ -97,25 +115,48 @@ namespace WindLidarSystem
             else
             {
                 // Ini 파일 전송
-                ftpPath = ftp_url + "/" + mData.iniFileName;
-                if (sendData(ftpPath, mData.iniFullFileName))
+                if (mData.iniFileName != "")
                 {
-                    mData.sendCount++;
+                    // iniFileName : 17_01_00_00_0_DBS.ini  => site13201_20170714_010000_DBS.ini
+                    string tmp = mData.iniFileName.Replace("_", "");   // => 170100000DBS.ini
+                    string tmpName2 = tmp.Substring(2, 6) + "_" + tmp.Substring(9);   // 010000_DBS.ini
+                    string ftpSaveFile2 =  m_stCode + "_" + mData.m_year + mData.m_mon + mData.m_day + tmpName2;
+                    ftpPath = ftp_url + "/" + ftpSaveFile2;   //  mData.iniFileName;
+                    //ftpPath = ftp_url + "/" + mData.iniFileName;
+                    if (sendData(ftpPath, mData.iniFullFileName))
+                    {
+                        mData.sendCount++;
+                    }
                 }
+
+
                 if (mData.rtdFileName != "")
                 {
                     // rtd 파일전송
-                    ftpPath = ftp_url + "/" + mData.rtdFileName;
+                    // rtdFileName : 17_01_00_00_0_DBS.rtd  => site13201_20170714_010000_DBS.rtd
+                    string tmp = mData.rtdFileName.Replace("_", "");   // => 170100000DBS.rtd
+                    string tmpName2 = tmp.Substring(2, 6) + "_" + tmp.Substring(9);   // 010000_DBS.rtd
+                    string ftpSaveFile2 =  m_stCode + "_" + mData.m_year + mData.m_mon + mData.m_day +  tmpName2;
+                    ftpPath = ftp_url + "/" + ftpSaveFile2;  //  mData.rtdFileName;
+                    //ftpPath = ftp_url + "/" +  mData.rtdFileName;
                     if (sendData(ftpPath, mData.rtdFullFileName))
                     {
                         mData.sendCount++;
                     }
                 }
-                // raw 파일전송
-                ftpPath = ftp_url + "/" + mData.rawFileName;
-                if (sendData(ftpPath, mData.rawFullFileName))
+                if (mData.rawFileName != "")
                 {
-                    mData.sendCount++;
+                    // raw 파일전송
+                    // rawFileName : 17_01_00_00_0_DBS.raw  => site13201_20170714_010000_DBS.raw
+                    string tmp = mData.rawFileName.Replace("_", "");   // => 170100000DBS.raw
+                    string tmpName2 = tmp.Substring(2, 6) + "_" + tmp.Substring(9);   // 010000_DBS.raw
+                    string ftpSaveFile2 =  m_stCode + "_" + mData.m_year + mData.m_mon + mData.m_day +  tmpName2;
+                    ftpPath = ftp_url + "/" + ftpSaveFile2;  //  mData.rawFileName;
+                    //ftpPath = ftp_url + "/" +  mData.rawFileName;
+                    if (sendData(ftpPath, mData.rawFullFileName))
+                    {
+                        mData.sendCount++;
+                    }
                 }
             }
 

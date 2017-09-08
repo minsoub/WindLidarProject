@@ -162,11 +162,13 @@ namespace WindLidarSystem
                             // FTP 전송 - need module
                             atsProcess.setFtpInfo(fileData.s_code, FTP_URI, ParamInitInfo.Instance.m_ftpIP, ParamInitInfo.Instance.m_ftpPort,
                                 ParamInitInfo.Instance.m_ftpUser, ParamInitInfo.Instance.m_ftpPass);
+
                             bool sts = atsProcess.ftpStaSendData(fileData);
 
                             if (sts == false)
                             {
                                 Console.WriteLine("[StaThreadProcess] ftpSendData false...........[" + fileData.s_code + "]");
+                                log("[StaThreadProcess] ftpSendData false...........["+fileData.s_code+" : " + fileData.no + "]");
                                 atsProcess.ftpFailUpdate(fileData);
                             }
                             found = 1;
@@ -183,12 +185,12 @@ namespace WindLidarSystem
                     }
                     if (found == 0)
                     {
-                        staHandle.WaitOne(1000 * System.Convert.ToInt16(ParamInitInfo.Instance.m_staThreadTime));       // 10 min
+                        staHandle.WaitOne(1000 * System.Convert.ToInt16(ParamInitInfo.Instance.m_staThreadTime));       // 1 min
                     }
                     else
                     {
                         // 처리할 데이터가 있을 수 있다. 
-                        staHandle.WaitOne(1000 * 10);    // 10 seconds
+                        staHandle.WaitOne(1000 * 8);    // 10 seconds
                     }
                     
                 }
@@ -225,8 +227,12 @@ namespace WindLidarSystem
                             {
                                 Console.WriteLine("[WindLidarDataProcess] ftpSendData false...........[" + fileData.s_code + "]");
                                 ftsProcess.ftpFailUpdate(fileData);
+                                found = 0;
                             }
-                            found = 1;
+                            else
+                            {
+                                found = 1;
+                            }
                         }
                         else
                         {
@@ -244,7 +250,7 @@ namespace WindLidarSystem
                     }
                     else
                     {
-                        waitHandle.WaitOne(1000 * 10);   // 10 seconds
+                        waitHandle.WaitOne(1000 * 2);   // 10 seconds
                     }
                 }
             }

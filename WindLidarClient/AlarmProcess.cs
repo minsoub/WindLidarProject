@@ -121,9 +121,9 @@ namespace WindLidarClient
                     using (UdpClient c = new UdpClient(stPort+1))   /// m_cstLocalPort-1))  // source port (로컬 포트에서 상태 포트를 하나 사용하므로 중복이 발생하므로 사용포트 - 1)
                     {                        
                         c.Send(buf, buf.Length, m_stHost, stPort);
-                        log.Log("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"]) " + msg);
+                        //log.Log("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"]) " + msg);
                         Console.WriteLine("Alaram send msg : " + msg);
-                        main.setMsg("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"])" + msg);
+                        //main.setMsg("Alarm data send (almDataSend :"+m_stHost+"["+stPort+"])" + msg);
 
                         c.Client.ReceiveTimeout = 2000;     // 2 second
                         IPEndPoint ipepLocal = new IPEndPoint(IPAddress.Any, stPort+1);     // 10001 + 1
@@ -138,9 +138,9 @@ namespace WindLidarClient
                         {
                             string data = Encoding.UTF8.GetString(rcvBuf);
                             string[] msgArr = data.Split(delimiterChar);
-                            log.Log("Alarm receive msg(almDataSend) : " + data);
+                            //log.Log("Alarm receive msg(almDataSend) : " + data);
                             Console.WriteLine("Alaram get msg : " + data);
-                            main.setMsg("Alarm receive msg(almDataSend) : " + data);
+                            //main.setMsg("Alarm receive msg(almDataSend) : " + data);
 
                             if (msgArr[3] == "ok")
                             {
@@ -194,9 +194,11 @@ namespace WindLidarClient
                         if (dir.Exists == false)
                         {
                             Console.WriteLine("Directory not exist.... : {0}", destDirName);
-                            log.Log("Directory no exist : " + destDirName);
+                            log.Log("[almDataBackup()] Directory no exist : " + destDirName);
+                            log.Log("[almDataBackup()] Directory create.....");
                             // 생성한다.
                             dir.Create();  // create folder
+                            log.Log("[almDataBackup()] Directory create success.....");
                         }
 
                         FileInfo file = new FileInfo(info.f_full_name);
@@ -212,7 +214,7 @@ namespace WindLidarClient
                 log.Log(ex.ToString());
 
                 sts = false;
-                main.setMsg("Alarm data error(almDataBackup) : " + ex.ToString());
+                main.setMsg("[almDataBackup()] Alarm data error : " + ex.ToString());
             }
             
             return sts;

@@ -12,7 +12,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>C:\ProjectWorkspace\WindLidarProject\Setup_Program\</PublishUrl>
+    <PublishUrl>F:\client\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -22,7 +22,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -145,6 +145,36 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_-.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_off.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_on.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start_sm.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop_sm.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_start_sm_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop_g.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btn_stop_sm_g.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
